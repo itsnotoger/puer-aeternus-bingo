@@ -86,15 +86,38 @@
             text-align: center;
         }
 
+        .shuffle-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .shuffle-btn:hover {
+            background: #229954;
+            transform: translateY(-1px);
+        }
+
+        .shuffle-btn:active {
+            transform: translateY(0);
+        }
+
         .bingo-container {
             display: grid;
             gap: 10px;
             max-width: 800px;
+            min-width: 0;
             width: 100%;
             background: rgba(255,255,255,0.1);
             padding: 20px;
             border-radius: 15px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            overflow: hidden;
         }
 
         .bingo-tile {
@@ -114,6 +137,10 @@
             color: #333;
             user-select: none;
             position: relative;
+            min-width: 0;
+            min-height: 0;
+            overflow: hidden;
+            word-wrap: break-word;
         }
 
         .bingo-tile:hover {
@@ -200,11 +227,11 @@
             <span class="item-count" id="itemCount">25</span>
             <button class="control-btn" onclick="increaseItems()">+</button>
         </div>
+        <button class="shuffle-btn" onclick="shuffleBoard()">🔀 Shuffle</button>
     </div>
     
     <h1>🎯 Bingo Board</h1>
     <div class="bingo-container" id="bingoBoard"></div>
-    <button class="reset-btn" onclick="location.reload()">Shuffle Board</button>
 
     <script>
         // ===== EDIT ITEMS HERE FOR TESTING =====
@@ -270,6 +297,10 @@ Push The Envelope`.split('\n').map(item => item.trim());
                 document.getElementById('itemCount').textContent = currentItemCount;
                 debouncedRefresh();
             }
+        }
+
+        function shuffleBoard() {
+            refreshBoard();
         }
 
         function debouncedRefresh() {

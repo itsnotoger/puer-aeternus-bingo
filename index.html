@@ -13,7 +13,7 @@
 
         body {
             font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -30,7 +30,6 @@
 
         .bingo-container {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
             gap: 10px;
             max-width: 600px;
             width: 100%;
@@ -43,7 +42,7 @@
         .bingo-tile {
             aspect-ratio: 1;
             background: white;
-            border: 3px solid #764ba2;
+            border: 3px solid #3498db;
             border-radius: 10px;
             display: flex;
             align-items: center;
@@ -56,6 +55,7 @@
             font-weight: 600;
             color: #333;
             user-select: none;
+            position: relative;
         }
 
         .bingo-tile:hover {
@@ -64,18 +64,33 @@
         }
 
         .bingo-tile.marked {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
             color: white;
-            border-color: #f5576c;
-            position: relative;
+            border-color: #229954;
+        }
+
+        .bingo-tile.marked::before {
+            content: '';
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 20px;
+            height: 20px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .bingo-tile.marked::after {
             content: '✓';
             position: absolute;
-            font-size: 40px;
+            top: 5px;
+            right: 5px;
+            font-size: 16px;
             color: white;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            font-weight: bold;
         }
 
         .reset-btn {
@@ -86,7 +101,7 @@
             border-radius: 25px;
             font-size: 16px;
             font-weight: 600;
-            color: #667eea;
+            color: #2c3e50;
             cursor: pointer;
             transition: all 0.3s ease;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
@@ -95,6 +110,15 @@
         .reset-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .error-message {
+            color: #e74c3c;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 600px;
+            text-align: center;
         }
 
         @media (max-width: 600px) {
@@ -116,35 +140,6 @@
     <button class="reset-btn" onclick="location.reload()">Shuffle Board</button>
 
     <script>
-        // Your 25 bingo items - EDIT THESE!
-        const bingoItems = [
-            "Free Space",
-            "Coffee Break",
-            "Meeting Runs Late",
-            "Technical Difficulties",
-            "Someone's On Mute",
-            "Can You See My Screen?",
-            "Sorry, Go Ahead",
-            "Email Could've Been",
-            "Let's Circle Back",
-            "Moving Forward",
-            "Synergy",
-            "Low Hanging Fruit",
-            "Think Outside Box",
-            "Touch Base",
-            "On My Radar",
-            "Bandwidth",
-            "Deep Dive",
-            "Loop You In",
-            "Take This Offline",
-            "Action Items",
-            "Best Practices",
-            "Leverage",
-            "Paradigm Shift",
-            "Win-Win",
-            "Game Changer"
-        ];
-
         // Fisher-Yates shuffle
         function shuffle(array) {
             const arr = [...array];
@@ -155,23 +150,72 @@
             return arr;
         }
 
-        // Initialize board
-        function initBoard() {
-            const board = document.getElementById('bingoBoard');
-            const shuffled = shuffle(bingoItems);
+        // Find nearest perfect square
+        function getNearestSquare(num) {
+            const sqrt = Math.sqrt(num);
+            const lower = Math.floor(sqrt);
+            const upper = Math.ceil(sqrt);
             
-            shuffled.forEach((item, index) => {
-                const tile = document.createElement('div');
-                tile.className = 'bingo-tile';
-                tile.textContent = item;
-                tile.dataset.index = index;
+            // Return the closest perfect square
+            if (num - lower * lower < upper * upper - num) {
+                return lower * lower;
+            }
+            return upper * upper;
+        }
+
+        // Initialize board from text file
+        async function initBoard() {
+            const board = document.getElementById('bingoBoard');
+            
+            try {
+                // Fetch the items.txt file
+                const response = await fetch('items.txt');
+                if (!response.ok) {
+                    throw new Error('Could not load items.txt');
+                }
                 
-                tile.addEventListener('click', function() {
-                    this.classList.toggle('marked');
+                const text = await response.text();
+                const allItems = text.split('\n')
+                    .map(line => line.trim())
+                    .filter(line => line.length > 0);
+                
+                if (allItems.length === 0) {
+                    throw new Error('No items found in items.txt');
+                }
+                
+                // Get nearest perfect square
+                const targetSize = getNearestSquare(allItems.length);
+                const gridSize = Math.sqrt(targetSize);
+                
+                // Take only the number of items we need
+                const items = allItems.slice(0, targetSize);
+                
+                // Set grid dimensions
+                board.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+                
+                // Shuffle and create tiles
+                const shuffled = shuffle(items);
+                
+                shuffled.forEach((item, index) => {
+                    const tile = document.createElement('div');
+                    tile.className = 'bingo-tile';
+                    tile.textContent = item;
+                    tile.dataset.index = index;
+                    
+                    tile.addEventListener('click', function() {
+                        this.classList.toggle('marked');
+                    });
+                    
+                    board.appendChild(tile);
                 });
                 
-                board.appendChild(tile);
-            });
+            } catch (error) {
+                board.innerHTML = `<div class="error-message">
+                    <h2>Oops!</h2>
+                    <p>Couldn't load items.txt. Make sure it's in the same directory as index.html</p>
+                    <p style="margin-top: 10px; font-size: 14px; color: #666;">Error: ${error.message}</p>
+                </div>`;
+            }
         }
 
         // Load board on page load

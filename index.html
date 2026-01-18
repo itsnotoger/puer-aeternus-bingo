@@ -28,10 +28,68 @@
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
+        .controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.95);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 150px;
+        }
+
+        .controls h3 {
+            margin: 0;
+            font-size: 14px;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .control-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .control-btn:hover {
+            background: #2980b9;
+            transform: scale(1.1);
+        }
+
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+
+        .item-count {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2c3e50;
+            min-width: 40px;
+            text-align: center;
+        }
+
         .bingo-container {
             display: grid;
             gap: 10px;
-            max-width: 600px;
+            max-width: 800px;
             width: 100%;
             background: rgba(255,255,255,0.1);
             padding: 20px;
@@ -135,11 +193,110 @@
     </style>
 </head>
 <body>
+    <div class="controls">
+        <h3>Items to Use</h3>
+        <div class="control-row">
+            <button class="control-btn" onclick="decreaseItems()">-</button>
+            <span class="item-count" id="itemCount">25</span>
+            <button class="control-btn" onclick="increaseItems()">+</button>
+        </div>
+    </div>
+    
     <h1>🎯 Bingo Board</h1>
     <div class="bingo-container" id="bingoBoard"></div>
     <button class="reset-btn" onclick="location.reload()">Shuffle Board</button>
 
     <script>
+        // ===== EDIT ITEMS HERE FOR TESTING =====
+        // Just add or remove items from this list to test different board sizes
+        const DEFAULT_ITEMS = `Free Space
+Coffee Break
+Meeting Runs Late
+Technical Difficulties
+Someone's On Mute
+Can You See My Screen?
+Sorry, Go Ahead
+Email Could've Been
+Let's Circle Back
+Moving Forward
+Synergy
+Low Hanging Fruit
+Think Outside Box
+Touch Base
+On My Radar
+Bandwidth
+Deep Dive
+Loop You In
+Take This Offline
+Action Items
+Best Practices
+Leverage
+Paradigm Shift
+Win-Win
+Game Changer
+At The End Of Day
+Reach Out
+Ping Me
+Circle Back Around
+Let's Take This Async
+Parking Lot
+Quick Sync
+Align On This
+Get Ducks In Row
+Run It Up Flagpole
+Boil The Ocean
+Move The Needle
+Drink The Kool-Aid
+Peel The Onion
+Push The Envelope`.split('\n').map(item => item.trim());
+
+        // Global variables for controlling items
+        let currentItemCount = 25;
+        let availableItems = [];
+        let rebuildTimeout = null;
+        let isBuilding = false;
+
+        function increaseItems() {
+            if (currentItemCount < availableItems.length) {
+                currentItemCount++;
+                document.getElementById('itemCount').textContent = currentItemCount;
+                debouncedRefresh();
+            }
+        }
+
+        function decreaseItems() {
+            if (currentItemCount > 1) {
+                currentItemCount--;
+                document.getElementById('itemCount').textContent = currentItemCount;
+                debouncedRefresh();
+            }
+        }
+
+        function debouncedRefresh() {
+            // Cancel any pending rebuild
+            if (rebuildTimeout) {
+                clearTimeout(rebuildTimeout);
+            }
+            
+            // Schedule a new rebuild
+            rebuildTimeout = setTimeout(() => {
+                refreshBoard();
+            }, 100);
+        }
+
+        function refreshBoard() {
+            // Don't start a new build if one is already happening
+            if (isBuilding) return;
+            
+            isBuilding = true;
+            const board = document.getElementById('bingoBoard');
+            board.innerHTML = '';
+            
+            initBoard().then(() => {
+                isBuilding = false;
+            });
+        }
+
         // Fisher-Yates shuffle
         function shuffle(array) {
             const arr = [...array];
@@ -150,72 +307,88 @@
             return arr;
         }
 
-        // Find nearest perfect square
-        function getNearestSquare(num) {
-            const sqrt = Math.sqrt(num);
-            const lower = Math.floor(sqrt);
-            const upper = Math.ceil(sqrt);
-            
-            // Return the closest perfect square
-            if (num - lower * lower < upper * upper - num) {
-                return lower * lower;
-            }
-            return upper * upper;
+        // Find next larger perfect square (ceiling)
+        function getNextSquare(num) {
+            const sqrt = Math.ceil(Math.sqrt(num));
+            return sqrt * sqrt;
         }
 
-        // Initialize board from text file
+        // Initialize board from text file or fallback
         async function initBoard() {
             const board = document.getElementById('bingoBoard');
+            let source = 'default items';
             
             try {
-                // Fetch the items.txt file
+                // Try to fetch the items.txt file
                 const response = await fetch('items.txt');
-                if (!response.ok) {
-                    throw new Error('Could not load items.txt');
-                }
-                
-                const text = await response.text();
-                const allItems = text.split('\n')
-                    .map(line => line.trim())
-                    .filter(line => line.length > 0);
-                
-                if (allItems.length === 0) {
-                    throw new Error('No items found in items.txt');
-                }
-                
-                // Get nearest perfect square
-                const targetSize = getNearestSquare(allItems.length);
-                const gridSize = Math.sqrt(targetSize);
-                
-                // Take only the number of items we need
-                const items = allItems.slice(0, targetSize);
-                
-                // Set grid dimensions
-                board.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
-                
-                // Shuffle and create tiles
-                const shuffled = shuffle(items);
-                
-                shuffled.forEach((item, index) => {
-                    const tile = document.createElement('div');
-                    tile.className = 'bingo-tile';
-                    tile.textContent = item;
-                    tile.dataset.index = index;
+                if (response.ok) {
+                    const text = await response.text();
+                    const fileItems = text.split('\n')
+                        .map(line => line.trim())
+                        .filter(line => line.length > 0);
                     
+                    if (fileItems.length > 0) {
+                        availableItems = fileItems;
+                        source = 'items.txt';
+                    } else {
+                        availableItems = [...DEFAULT_ITEMS];
+                    }
+                } else {
+                    availableItems = [...DEFAULT_ITEMS];
+                }
+            } catch (error) {
+                // Fallback to default items
+                availableItems = [...DEFAULT_ITEMS];
+            }
+            
+            // Update the max count display and clamp current count
+            if (currentItemCount > availableItems.length) {
+                currentItemCount = availableItems.length;
+            }
+            document.getElementById('itemCount').textContent = currentItemCount;
+            
+            // Use only the requested number of items
+            const allItems = availableItems.slice(0, currentItemCount);
+            
+            console.log(`Loading ${allItems.length} items from ${source} (${availableItems.length} available)`);
+            
+            // Get next larger perfect square to fit all items
+            const targetSize = getNextSquare(allItems.length);
+            const gridSize = Math.sqrt(targetSize);
+            
+            console.log(`Creating ${gridSize}x${gridSize} board (${targetSize} tiles total)`);
+            
+            // Use all items and pad with empty tiles if needed
+            const items = [...allItems];
+            while (items.length < targetSize) {
+                items.push(''); // Empty tile
+            }
+            
+            // Set grid dimensions
+            board.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+            
+            // Shuffle and create tiles
+            const shuffled = shuffle(items);
+            
+            shuffled.forEach((item, index) => {
+                const tile = document.createElement('div');
+                tile.className = 'bingo-tile';
+                tile.textContent = item;
+                tile.dataset.index = index;
+                
+                // Only make clickable if it has content
+                if (item) {
                     tile.addEventListener('click', function() {
                         this.classList.toggle('marked');
                     });
-                    
-                    board.appendChild(tile);
-                });
+                } else {
+                    tile.style.opacity = '0.3';
+                    tile.style.cursor = 'default';
+                    tile.style.border = '3px dashed #95a5a6';
+                }
                 
-            } catch (error) {
-                board.innerHTML = `<div class="error-message">
-                    <h2>Oops!</h2>
-                    <p>Couldn't load items.txt. Make sure it's in the same directory as index.html</p>
-                    <p style="margin-top: 10px; font-size: 14px; color: #666;">Error: ${error.message}</p>
-                </div>`;
-            }
+                board.appendChild(tile);
+            });
         }
 
         // Load board on page load

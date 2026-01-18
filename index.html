@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bingo Board</title>
+    <title>Puer Aeternus Bingo</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎭</text></svg>">
     <style>
         * {
             margin: 0;
@@ -18,14 +19,15 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             padding: 20px;
+            padding-top: 80px;
         }
 
         h1 {
             color: white;
             margin-bottom: 30px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            position: relative;
         }
 
         .controls {
@@ -118,6 +120,7 @@
             border-radius: 15px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.3);
             overflow: hidden;
+            position: relative;
         }
 
         .bingo-tile {
@@ -141,6 +144,18 @@
             min-height: 0;
             overflow: hidden;
             word-wrap: break-word;
+        }
+
+        .bingo-tile.placeholder {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-color: #bdc3c7;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
         }
 
         .bingo-tile:hover {
@@ -230,7 +245,7 @@
         <button class="shuffle-btn" onclick="shuffleBoard()">🔀 Shuffle</button>
     </div>
     
-    <h1>🎯 Bingo Board</h1>
+    <h1>🎭 Puer Aeternus Bingo</h1>
     <div class="bingo-container" id="bingoBoard"></div>
 
     <script>
@@ -321,11 +336,108 @@ Push The Envelope`.split('\n').map(item => item.trim());
             
             isBuilding = true;
             const board = document.getElementById('bingoBoard');
-            board.innerHTML = '';
             
-            initBoard().then(() => {
-                isBuilding = false;
+            // Render placeholders with proper sizing FIRST
+            renderPlaceholders();
+            
+            // Then swap in the real content after a tiny delay
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    populateBoard();
+                });
             });
+        }
+
+        function renderPlaceholders() {
+            const board = document.getElementById('bingoBoard');
+            
+            // Calculate grid size
+            const targetSize = getNextSquare(currentItemCount);
+            const gridSize = Math.sqrt(targetSize);
+            
+            // Set grid dimensions
+            board.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+            
+            // Clear and create placeholders
+            board.innerHTML = '';
+            for (let i = 0; i < targetSize; i++) {
+                const tile = document.createElement('div');
+                tile.className = 'bingo-tile placeholder';
+                board.appendChild(tile);
+            }
+        }
+        
+        async function populateBoard() {
+            const board = document.getElementById('bingoBoard');
+            
+            // Load items
+            let source = 'default items';
+            try {
+                const response = await fetch('items.txt');
+                if (response.ok) {
+                    const text = await response.text();
+                    const fileItems = text.split('\n')
+                        .map(line => line.trim())
+                        .filter(line => line.length > 0);
+                    
+                    if (fileItems.length > 0) {
+                        availableItems = fileItems;
+                        source = 'items.txt';
+                    } else {
+                        availableItems = [...DEFAULT_ITEMS];
+                    }
+                } else {
+                    availableItems = [...DEFAULT_ITEMS];
+                }
+            } catch (error) {
+                availableItems = [...DEFAULT_ITEMS];
+            }
+            
+            // Update count if needed
+            if (currentItemCount > availableItems.length) {
+                currentItemCount = availableItems.length;
+            }
+            document.getElementById('itemCount').textContent = currentItemCount;
+            
+            // Get items to use
+            const allItems = availableItems.slice(0, currentItemCount);
+            console.log(`Loading ${allItems.length} items from ${source} (${availableItems.length} available)`);
+            
+            const targetSize = getNextSquare(allItems.length);
+            const gridSize = Math.sqrt(targetSize);
+            console.log(`Creating ${gridSize}x${gridSize} board (${targetSize} tiles total)`);
+            
+            // Pad with empties
+            const items = [...allItems];
+            while (items.length < targetSize) {
+                items.push('');
+            }
+            
+            // Shuffle
+            const shuffled = shuffle(items);
+            
+            // Replace placeholders with real tiles
+            const tiles = board.querySelectorAll('.bingo-tile');
+            shuffled.forEach((item, index) => {
+                if (tiles[index]) {
+                    const tile = tiles[index];
+                    tile.className = 'bingo-tile';
+                    tile.textContent = item;
+                    
+                    if (item) {
+                        tile.onclick = function() {
+                            this.classList.toggle('marked');
+                        };
+                    } else {
+                        tile.style.opacity = '0.3';
+                        tile.style.cursor = 'default';
+                        tile.style.border = '3px dashed #95a5a6';
+                        tile.onclick = null;
+                    }
+                }
+            });
+            
+            isBuilding = false;
         }
 
         // Fisher-Yates shuffle
@@ -346,80 +458,10 @@ Push The Envelope`.split('\n').map(item => item.trim());
 
         // Initialize board from text file or fallback
         async function initBoard() {
-            const board = document.getElementById('bingoBoard');
-            let source = 'default items';
-            
-            try {
-                // Try to fetch the items.txt file
-                const response = await fetch('items.txt');
-                if (response.ok) {
-                    const text = await response.text();
-                    const fileItems = text.split('\n')
-                        .map(line => line.trim())
-                        .filter(line => line.length > 0);
-                    
-                    if (fileItems.length > 0) {
-                        availableItems = fileItems;
-                        source = 'items.txt';
-                    } else {
-                        availableItems = [...DEFAULT_ITEMS];
-                    }
-                } else {
-                    availableItems = [...DEFAULT_ITEMS];
-                }
-            } catch (error) {
-                // Fallback to default items
-                availableItems = [...DEFAULT_ITEMS];
-            }
-            
-            // Update the max count display and clamp current count
-            if (currentItemCount > availableItems.length) {
-                currentItemCount = availableItems.length;
-            }
-            document.getElementById('itemCount').textContent = currentItemCount;
-            
-            // Use only the requested number of items
-            const allItems = availableItems.slice(0, currentItemCount);
-            
-            console.log(`Loading ${allItems.length} items from ${source} (${availableItems.length} available)`);
-            
-            // Get next larger perfect square to fit all items
-            const targetSize = getNextSquare(allItems.length);
-            const gridSize = Math.sqrt(targetSize);
-            
-            console.log(`Creating ${gridSize}x${gridSize} board (${targetSize} tiles total)`);
-            
-            // Use all items and pad with empty tiles if needed
-            const items = [...allItems];
-            while (items.length < targetSize) {
-                items.push(''); // Empty tile
-            }
-            
-            // Set grid dimensions
-            board.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
-            
-            // Shuffle and create tiles
-            const shuffled = shuffle(items);
-            
-            shuffled.forEach((item, index) => {
-                const tile = document.createElement('div');
-                tile.className = 'bingo-tile';
-                tile.textContent = item;
-                tile.dataset.index = index;
-                
-                // Only make clickable if it has content
-                if (item) {
-                    tile.addEventListener('click', function() {
-                        this.classList.toggle('marked');
-                    });
-                } else {
-                    tile.style.opacity = '0.3';
-                    tile.style.cursor = 'default';
-                    tile.style.border = '3px dashed #95a5a6';
-                }
-                
-                board.appendChild(tile);
-            });
+            // First render placeholders so we have SOMETHING on screen
+            renderPlaceholders();
+            // Then populate with real content
+            await populateBoard();
         }
 
         // Load board on page load

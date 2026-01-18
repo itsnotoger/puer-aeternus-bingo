@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bingo Board</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        h1 {
+            color: white;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .bingo-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            max-width: 600px;
+            width: 100%;
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .bingo-tile {
+            aspect-ratio: 1;
+            background: white;
+            border: 3px solid #764ba2;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            user-select: none;
+        }
+
+        .bingo-tile:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .bingo-tile.marked {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-color: #f5576c;
+            position: relative;
+        }
+
+        .bingo-tile.marked::after {
+            content: '✓';
+            position: absolute;
+            font-size: 40px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .reset-btn {
+            margin-top: 20px;
+            padding: 12px 30px;
+            background: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #667eea;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .reset-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        @media (max-width: 600px) {
+            .bingo-tile {
+                font-size: 11px;
+                padding: 5px;
+            }
+
+            .bingo-container {
+                gap: 5px;
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>🎯 Bingo Board</h1>
+    <div class="bingo-container" id="bingoBoard"></div>
+    <button class="reset-btn" onclick="location.reload()">Shuffle Board</button>
+
+    <script>
+        // Your 25 bingo items - EDIT THESE!
+        const bingoItems = [
+            "Free Space",
+            "Coffee Break",
+            "Meeting Runs Late",
+            "Technical Difficulties",
+            "Someone's On Mute",
+            "Can You See My Screen?",
+            "Sorry, Go Ahead",
+            "Email Could've Been",
+            "Let's Circle Back",
+            "Moving Forward",
+            "Synergy",
+            "Low Hanging Fruit",
+            "Think Outside Box",
+            "Touch Base",
+            "On My Radar",
+            "Bandwidth",
+            "Deep Dive",
+            "Loop You In",
+            "Take This Offline",
+            "Action Items",
+            "Best Practices",
+            "Leverage",
+            "Paradigm Shift",
+            "Win-Win",
+            "Game Changer"
+        ];
+
+        // Fisher-Yates shuffle
+        function shuffle(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // Initialize board
+        function initBoard() {
+            const board = document.getElementById('bingoBoard');
+            const shuffled = shuffle(bingoItems);
+            
+            shuffled.forEach((item, index) => {
+                const tile = document.createElement('div');
+                tile.className = 'bingo-tile';
+                tile.textContent = item;
+                tile.dataset.index = index;
+                
+                tile.addEventListener('click', function() {
+                    this.classList.toggle('marked');
+                });
+                
+                board.appendChild(tile);
+            });
+        }
+
+        // Load board on page load
+        initBoard();
+    </script>
+</body>
+</html>

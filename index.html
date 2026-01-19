@@ -431,6 +431,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
             board.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
             
             board.innerHTML = '';
+            const maxDelay = 200.0;
             for (let i = 0; i < targetSize; i++) {
                 const tile = document.createElement('div');
                 tile.className = 'bingo-tile placeholder spiral-in';
@@ -441,7 +442,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
                 
                 // Stagger the spiral-in animation
                 setTimeout(() => {
-                    tile.style.animationDelay = `${i * 20}ms`;
+                    tile.style.animationDelay = `${Math.floor((i/targetSize)*maxDelay)}ms`;
                 }, 0);
             }
         }

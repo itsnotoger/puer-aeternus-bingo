@@ -393,10 +393,16 @@ Push The Envelope`.split('\n').map(item => item.trim());
             isBuilding = true;
             const board = document.getElementById('bingoBoard');
             const tiles = board.querySelectorAll('.bingo-tile');
+
+            function calcDelay(index) {
+                return Math.floor(((index+1)/tiles.length) * maxDelay);
+            };
             
             // Step 1: Flip all marked cards back
+            let flipped = false;
             tiles.forEach(tile => {
                 if (tile.classList.contains('marked')) {
+                    flipped = true;
                     tile.classList.remove('marked');
                 }
             });
@@ -404,11 +410,11 @@ Push The Envelope`.split('\n').map(item => item.trim());
             // Step 2: Spiral out effect with stagger
             setTimeout(() => {
                 tiles.forEach((tile, index) => {
-                    //setTimeout(() => {
+                    setTimeout(() => {
                         tile.classList.add('spiral-out');
-                    //}, index * 30); // Stagger each tile by 30ms
+                    }, calcDelay(index)); // Stagger each tile
                 });
-            }, 300); // Wait for flip back animation
+            }, flipped ? 300 : 0); // Wait for flip back animation
             
             // Step 3: Clear and show placeholders after spiral completes
             setTimeout(() => {
@@ -420,7 +426,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
                         populateBoard();
                     });
                 });
-            }, 300 + (tiles.length * 30) + 600); // Wait for all spirals to complete
+            }, (flipped ? 300 : 0) + calcDelay(tiles.length-1) + 600); // Wait for all spirals to complete
         }
 
         function renderPlaceholders() {

@@ -296,7 +296,8 @@
             flipbackWait: 300,          // Wait time before starting spiral out (if cards were flipped)
             maxStaggerDelay: 200,       // Maximum delay for staggered animations
             debounceDelay: 100,         // Debounce delay for rapid button clicks
-            spiralCompleteBuffer: 600   // Extra time to ensure spiral completes
+            spiralCompleteBuffer: 600,  // Extra time to ensure spiral completes
+            minPlaceholderDisplay: 500  // Minimum time to show placeholder animation (for that professional look)
         };
 
         // Inject timing values into CSS custom properties
@@ -364,6 +365,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
         let availableItems = [];
         let rebuildTimeout = null;
         let isBuilding = false;
+        let itemsLoadedOnce = false;  // Track if we've already fetched items.txt
 
         // ============================================================
         // UTILITY FUNCTIONS
@@ -471,6 +473,39 @@ Push The Envelope`.split('\n').map(item => item.trim());
         // BOARD RENDERING
         // ============================================================
 
+        // Load items from file - but only ONCE, capisce?
+        async function loadItemsOnce() {
+            // Already got the goods? Fuggedaboutit!
+            if (itemsLoadedOnce) {
+                return;
+            }
+            
+            let source = 'default items';
+            try {
+                const response = await fetch('items.txt');
+                if (response.ok) {
+                    const text = await response.text();
+                    const fileItems = text.split('\n')
+                        .map(line => line.trim())
+                        .filter(line => line.length > 0);
+                    
+                    if (fileItems.length > 0) {
+                        availableItems = fileItems;
+                        source = 'items.txt';
+                    } else {
+                        availableItems = [...DEFAULT_ITEMS];
+                    }
+                } else {
+                    availableItems = [...DEFAULT_ITEMS];
+                }
+            } catch (error) {
+                availableItems = [...DEFAULT_ITEMS];
+            }
+            
+            itemsLoadedOnce = true;
+            console.log(`Loaded ${availableItems.length} items from ${source} (one time only, baby!)`);
+        }
+
         function renderPlaceholders() {
             const board = document.getElementById('bingoBoard');
             
@@ -498,29 +533,21 @@ Push The Envelope`.split('\n').map(item => item.trim());
         
         async function populateBoard() {
             const board = document.getElementById('bingoBoard');
+            const startTime = performance.now();
             
-            // Load items from file or use defaults
-            let source = 'default items';
-            try {
-                const response = await fetch('items.txt');
-                if (response.ok) {
-                    const text = await response.text();
-                    const fileItems = text.split('\n')
-                        .map(line => line.trim())
-                        .filter(line => line.length > 0);
-                    
-                    if (fileItems.length > 0) {
-                        availableItems = fileItems;
-                        source = 'items.txt';
-                    } else {
-                        availableItems = [...DEFAULT_ITEMS];
-                    }
-                } else {
-                    availableItems = [...DEFAULT_ITEMS];
-                }
-            } catch (error) {
-                availableItems = [...DEFAULT_ITEMS];
-            }
+            // Promise 1: Minimum animation time - gotta let people appreciate the show!
+            const minAnimTime = new Promise(resolve => 
+                setTimeout(resolve, TIMINGS.minPlaceholderDisplay)
+            );
+            
+            // Promise 2: Load items (only first time, after that it's instant)
+            const itemsPromise = loadItemsOnce();
+            
+            // Wait for BOTH - the slower one sets the pace, capisce?
+            await Promise.all([minAnimTime, itemsPromise]);
+            
+            const loadTime = Math.round(performance.now() - startTime);
+            console.log(`Board ready after ${loadTime}ms (minimum was ${TIMINGS.minPlaceholderDisplay}ms)`);
             
             // Ensure item count doesn't exceed available items
             if (currentItemCount > availableItems.length) {
@@ -529,7 +556,6 @@ Push The Envelope`.split('\n').map(item => item.trim());
             document.getElementById('itemCount').textContent = currentItemCount;
             
             const allItems = availableItems.slice(0, currentItemCount);
-            console.log(`Loading ${allItems.length} items from ${source} (${availableItems.length} available)`);
             
             const targetSize = getNextSquare(allItems.length);
             const gridSize = Math.sqrt(targetSize);
@@ -543,7 +569,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
             
             const shuffled = shuffle(items);
             
-            // Populate tiles
+            // Populate tiles - NOW with perfect timing!
             const tiles = board.querySelectorAll('.bingo-tile');
             shuffled.forEach((item, index) => {
                 if (tiles[index]) {

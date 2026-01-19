@@ -310,6 +310,7 @@
     <div class="bingo-container" id="bingoBoard"></div>
 
     <script>
+        let maxDelay = 200.0;
         const DEFAULT_ITEMS = `Free Space
 Coffee Break
 Meeting Runs Late
@@ -403,9 +404,9 @@ Push The Envelope`.split('\n').map(item => item.trim());
             // Step 2: Spiral out effect with stagger
             setTimeout(() => {
                 tiles.forEach((tile, index) => {
-                    setTimeout(() => {
+                    //setTimeout(() => {
                         tile.classList.add('spiral-out');
-                    }, index * 30); // Stagger each tile by 30ms
+                    //}, index * 30); // Stagger each tile by 30ms
                 });
             }, 300); // Wait for flip back animation
             
@@ -431,7 +432,6 @@ Push The Envelope`.split('\n').map(item => item.trim());
             board.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
             
             board.innerHTML = '';
-            const maxDelay = 200.0;
             for (let i = 0; i < targetSize; i++) {
                 const tile = document.createElement('div');
                 tile.className = 'bingo-tile placeholder spiral-in';

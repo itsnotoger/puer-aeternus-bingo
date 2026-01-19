@@ -139,7 +139,7 @@
             position: relative;
             width: 100%;
             height: 100%;
-            transition: transform 0.6s;
+            transition: transform var(--flip-duration);
             transform-style: preserve-3d;
         }
 
@@ -178,7 +178,7 @@
         .bingo-tile.placeholder .tile-inner {
             background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
             background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
+            animation: shimmer var(--shimmer-duration) infinite;
             border-radius: 10px;
             border: 3px solid #bdc3c7;
         }
@@ -220,11 +220,11 @@
         }
 
         .bingo-tile.spiral-out .tile-inner {
-            animation: spiralOut 0.6s ease-in-out forwards;
+            animation: spiralOut var(--spiral-out-duration) ease-in-out forwards;
         }
 
         .bingo-tile.spiral-in .tile-inner {
-            animation: spiralIn 0.5s ease-out forwards;
+            animation: spiralIn var(--spiral-in-duration) ease-out forwards;
         }
 
         .tile-back::before {
@@ -249,34 +249,6 @@
             font-size: 16px;
             color: white;
             font-weight: bold;
-        }
-
-        .reset-btn {
-            margin-top: 20px;
-            padding: 12px 30px;
-            background: white;
-            border: none;
-            border-radius: 25px;
-            font-size: 16px;
-            font-weight: 600;
-            color: #2c3e50;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-
-        .reset-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-        }
-
-        .error-message {
-            color: #e74c3c;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            max-width: 600px;
-            text-align: center;
         }
 
         @media (max-width: 600px) {
@@ -310,7 +282,43 @@
     <div class="bingo-container" id="bingoBoard"></div>
 
     <script>
-        let maxDelay = 200.0;
+        // ============================================================
+        // TIMING CONFIGURATION - Single source of truth, capisce?
+        // ============================================================
+        const TIMINGS = {
+            // CSS Animation durations (in milliseconds)
+            flipDuration: 600,          // How long the card flip takes
+            spiralOutDuration: 600,     // How long tiles spiral out
+            spiralInDuration: 500,      // How long tiles spiral in
+            shimmerDuration: 1500,      // Placeholder shimmer effect
+            
+            // JavaScript timing values (in milliseconds)
+            flipbackWait: 300,          // Wait time before starting spiral out (if cards were flipped)
+            maxStaggerDelay: 200,       // Maximum delay for staggered animations
+            debounceDelay: 100,         // Debounce delay for rapid button clicks
+            spiralCompleteBuffer: 600   // Extra time to ensure spiral completes
+        };
+
+        // Inject timing values into CSS custom properties
+        function initCSSVariables() {
+            const root = document.documentElement;
+            root.style.setProperty('--flip-duration', `${TIMINGS.flipDuration}ms`);
+            root.style.setProperty('--spiral-out-duration', `${TIMINGS.spiralOutDuration}ms`);
+            root.style.setProperty('--spiral-in-duration', `${TIMINGS.spiralInDuration}ms`);
+            root.style.setProperty('--shimmer-duration', `${TIMINGS.shimmerDuration}ms`);
+        }
+
+        // Make TIMINGS available in console for live tweaking
+        // Usage: TIMINGS.flipDuration = 1000; initCSSVariables();
+        window.TIMINGS = TIMINGS;
+        window.refreshCSSTimings = initCSSVariables;
+
+        // Initialize CSS variables on load
+        initCSSVariables();
+
+        // ============================================================
+        // APPLICATION STATE
+        // ============================================================
         const DEFAULT_ITEMS = `Free Space
 Coffee Break
 Meeting Runs Late
@@ -357,6 +365,32 @@ Push The Envelope`.split('\n').map(item => item.trim());
         let rebuildTimeout = null;
         let isBuilding = false;
 
+        // ============================================================
+        // UTILITY FUNCTIONS
+        // ============================================================
+        
+        function shuffle(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function getNextSquare(num) {
+            const sqrt = Math.ceil(Math.sqrt(num));
+            return sqrt * sqrt;
+        }
+
+        function calculateStaggerDelay(index, totalTiles) {
+            return Math.floor(((index + 1) / totalTiles) * TIMINGS.maxStaggerDelay);
+        }
+
+        // ============================================================
+        // USER INTERACTION HANDLERS
+        // ============================================================
+
         function increaseItems() {
             if (currentItemCount < availableItems.length) {
                 currentItemCount++;
@@ -384,8 +418,12 @@ Push The Envelope`.split('\n').map(item => item.trim());
             
             rebuildTimeout = setTimeout(() => {
                 refreshBoard();
-            }, 100);
+            }, TIMINGS.debounceDelay);
         }
+
+        // ============================================================
+        // BOARD REFRESH ANIMATION SEQUENCE
+        // ============================================================
 
         function refreshBoard() {
             if (isBuilding) return;
@@ -393,41 +431,45 @@ Push The Envelope`.split('\n').map(item => item.trim());
             isBuilding = true;
             const board = document.getElementById('bingoBoard');
             const tiles = board.querySelectorAll('.bingo-tile');
-
-            function calcDelay(index) {
-                return Math.floor(((index+1)/tiles.length) * maxDelay);
-            };
             
             // Step 1: Flip all marked cards back
-            let flipped = false;
+            let hadFlippedCards = false;
             tiles.forEach(tile => {
                 if (tile.classList.contains('marked')) {
-                    flipped = true;
+                    hadFlippedCards = true;
                     tile.classList.remove('marked');
                 }
             });
             
             // Step 2: Spiral out effect with stagger
+            const spiralOutDelay = hadFlippedCards ? TIMINGS.flipbackWait : 0;
             setTimeout(() => {
                 tiles.forEach((tile, index) => {
                     setTimeout(() => {
                         tile.classList.add('spiral-out');
-                    }, calcDelay(index)); // Stagger each tile
+                    }, calculateStaggerDelay(index, tiles.length));
                 });
-            }, flipped ? 300 : 0); // Wait for flip back animation
+            }, spiralOutDelay);
             
-            // Step 3: Clear and show placeholders after spiral completes
+            // Step 3: Clear and show placeholders, then spiral in new tiles
+            const lastTileDelay = calculateStaggerDelay(tiles.length - 1, tiles.length);
+            const totalWaitTime = spiralOutDelay + lastTileDelay + TIMINGS.spiralCompleteBuffer;
+            
             setTimeout(() => {
                 renderPlaceholders();
                 
-                // Step 4: Spiral in the new tiles
+                // Double RAF for clean render
                 requestAnimationFrame(() => {
                     requestAnimationFrame(() => {
                         populateBoard();
                     });
                 });
-            }, (flipped ? 300 : 0) + calcDelay(tiles.length-1) + 600); // Wait for all spirals to complete
+            }, totalWaitTime);
         }
+
+        // ============================================================
+        // BOARD RENDERING
+        // ============================================================
 
         function renderPlaceholders() {
             const board = document.getElementById('bingoBoard');
@@ -448,7 +490,8 @@ Push The Envelope`.split('\n').map(item => item.trim());
                 
                 // Stagger the spiral-in animation
                 setTimeout(() => {
-                    tile.style.animationDelay = `${Math.floor((i/targetSize)*maxDelay)}ms`;
+                    const delay = calculateStaggerDelay(i, targetSize);
+                    tile.style.animationDelay = `${delay}ms`;
                 }, 0);
             }
         }
@@ -456,6 +499,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
         async function populateBoard() {
             const board = document.getElementById('bingoBoard');
             
+            // Load items from file or use defaults
             let source = 'default items';
             try {
                 const response = await fetch('items.txt');
@@ -478,6 +522,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
                 availableItems = [...DEFAULT_ITEMS];
             }
             
+            // Ensure item count doesn't exceed available items
             if (currentItemCount > availableItems.length) {
                 currentItemCount = availableItems.length;
             }
@@ -490,6 +535,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
             const gridSize = Math.sqrt(targetSize);
             console.log(`Creating ${gridSize}x${gridSize} board (${targetSize} tiles total)`);
             
+            // Pad items array with empty strings to fill grid
             const items = [...allItems];
             while (items.length < targetSize) {
                 items.push('');
@@ -497,6 +543,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
             
             const shuffled = shuffle(items);
             
+            // Populate tiles
             const tiles = board.querySelectorAll('.bingo-tile');
             shuffled.forEach((item, index) => {
                 if (tiles[index]) {
@@ -536,19 +583,9 @@ Push The Envelope`.split('\n').map(item => item.trim());
             isBuilding = false;
         }
 
-        function shuffle(array) {
-            const arr = [...array];
-            for (let i = arr.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [arr[i], arr[j]] = [arr[j], arr[i]];
-            }
-            return arr;
-        }
-
-        function getNextSquare(num) {
-            const sqrt = Math.ceil(Math.sqrt(num));
-            return sqrt * sqrt;
-        }
+        // ============================================================
+        // INITIALIZATION
+        // ============================================================
 
         async function initBoard() {
             renderPlaceholders();

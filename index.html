@@ -188,13 +188,43 @@
             100% { background-position: -200% 0; }
         }
 
-        .bingo-tile:hover .tile-inner {
+        .bingo-tile:not(.empty):hover .tile-inner {
             transform: rotateY(15deg);
             box-shadow: 0 6px 18px rgba(0,0,0,0.25);
         }
 
-        .bingo-tile.marked:hover .tile-inner {
+        .bingo-tile.marked:not(.empty):hover .tile-inner {
             transform: rotateY(165deg);
+        }
+
+        @keyframes spiralOut {
+            0% {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(0) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        @keyframes spiralIn {
+            0% {
+                transform: scale(0) rotate(-360deg);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+
+        .bingo-tile.spiral-out .tile-inner {
+            animation: spiralOut 0.6s ease-in-out forwards;
+        }
+
+        .bingo-tile.spiral-in .tile-inner {
+            animation: spiralIn 0.5s ease-out forwards;
         }
 
         .tile-back::before {
@@ -361,14 +391,35 @@ Push The Envelope`.split('\n').map(item => item.trim());
             
             isBuilding = true;
             const board = document.getElementById('bingoBoard');
+            const tiles = board.querySelectorAll('.bingo-tile');
             
-            renderPlaceholders();
-            
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    populateBoard();
-                });
+            // Step 1: Flip all marked cards back
+            tiles.forEach(tile => {
+                if (tile.classList.contains('marked')) {
+                    tile.classList.remove('marked');
+                }
             });
+            
+            // Step 2: Spiral out effect with stagger
+            setTimeout(() => {
+                tiles.forEach((tile, index) => {
+                    setTimeout(() => {
+                        tile.classList.add('spiral-out');
+                    }, index * 30); // Stagger each tile by 30ms
+                });
+            }, 300); // Wait for flip back animation
+            
+            // Step 3: Clear and show placeholders after spiral completes
+            setTimeout(() => {
+                renderPlaceholders();
+                
+                // Step 4: Spiral in the new tiles
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        populateBoard();
+                    });
+                });
+            }, 300 + (tiles.length * 30) + 600); // Wait for all spirals to complete
         }
 
         function renderPlaceholders() {
@@ -382,11 +433,16 @@ Push The Envelope`.split('\n').map(item => item.trim());
             board.innerHTML = '';
             for (let i = 0; i < targetSize; i++) {
                 const tile = document.createElement('div');
-                tile.className = 'bingo-tile placeholder';
+                tile.className = 'bingo-tile placeholder spiral-in';
                 const inner = document.createElement('div');
                 inner.className = 'tile-inner';
                 tile.appendChild(inner);
                 board.appendChild(tile);
+                
+                // Stagger the spiral-in animation
+                setTimeout(() => {
+                    tile.style.animationDelay = `${i * 20}ms`;
+                }, 0);
             }
         }
         
@@ -461,6 +517,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
                             this.classList.toggle('marked');
                         };
                     } else {
+                        tile.classList.add('empty');
                         tile.style.opacity = '0.3';
                         tile.style.cursor = 'default';
                         front.style.border = '3px dashed #95a5a6';

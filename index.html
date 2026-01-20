@@ -175,17 +175,14 @@
             transform: rotateY(180deg);
         }
 
-        .bingo-tile.placeholder .tile-inner {
-            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-            background-size: 200% 100%;
-            animation: shimmer var(--shimmer-duration) infinite;
-            border-radius: 10px;
-            border: 3px solid #bdc3c7;
+        .bingo-tile.placeholder {
+            pointer-events: none;
         }
 
-        @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
+        .bingo-tile.placeholder .tile-inner {
+            background: transparent;
+            border-radius: 10px;
+            border: none;
         }
 
         .bingo-tile:not(.empty):hover .tile-inner {
@@ -224,7 +221,7 @@
         }
 
         .bingo-tile.spiral-in .tile-inner {
-            animation: spiralIn var(--spiral-in-duration) ease-out forwards;
+            animation: spiralIn var(--spiral-in-duration) ease-out;
         }
 
         .tile-back::before {
@@ -455,7 +452,8 @@ Push The Envelope`.split('\n').map(item => item.trim());
             
             // Step 3: Clear and show placeholders, then spiral in new tiles
             const lastTileDelay = calculateStaggerDelay(tiles.length - 1, tiles.length);
-            const totalWaitTime = spiralOutDelay + lastTileDelay + TIMINGS.spiralCompleteBuffer;
+            // Wait for: flipback delay + last tile starts + spiral animation completes
+            const totalWaitTime = spiralOutDelay + lastTileDelay + TIMINGS.spiralOutDuration + 100;
             
             setTimeout(() => {
                 renderPlaceholders();
@@ -515,19 +513,14 @@ Push The Envelope`.split('\n').map(item => item.trim());
             board.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
             
             board.innerHTML = '';
+            // Create invisible skeleton tiles to maintain grid structure
             for (let i = 0; i < targetSize; i++) {
                 const tile = document.createElement('div');
-                tile.className = 'bingo-tile placeholder spiral-in';
+                tile.className = 'bingo-tile placeholder';
                 const inner = document.createElement('div');
                 inner.className = 'tile-inner';
                 tile.appendChild(inner);
                 board.appendChild(tile);
-                
-                // Stagger the spiral-in animation
-                setTimeout(() => {
-                    const delay = calculateStaggerDelay(i, targetSize);
-                    tile.style.animationDelay = `${delay}ms`;
-                }, 0);
             }
         }
         
@@ -569,7 +562,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
             
             const shuffled = shuffle(items);
             
-            // Populate tiles - NOW with perfect timing!
+            // Fill existing placeholder tiles with real content
             const tiles = board.querySelectorAll('.bingo-tile');
             shuffled.forEach((item, index) => {
                 if (tiles[index]) {
@@ -578,6 +571,10 @@ Push The Envelope`.split('\n').map(item => item.trim());
                     
                     const inner = document.createElement('div');
                     inner.className = 'tile-inner';
+                    
+                    // Set initial state INLINE to prevent flash - start invisible!
+                    inner.style.transform = 'scale(0) rotate(-360deg)';
+                    inner.style.opacity = '0';
                     
                     const front = document.createElement('div');
                     front.className = 'tile-front';
@@ -604,6 +601,29 @@ Push The Envelope`.split('\n').map(item => item.trim());
                         tile.onclick = null;
                     }
                 }
+            });
+            
+            // Force reflow so browser registers the inline styles
+            board.offsetHeight;
+            
+            // NOW trigger spiral-in animation on all tiles
+            tiles.forEach((tile, index) => {
+                const inner = tile.querySelector('.tile-inner');
+                if (!inner) return;
+                
+                const delay = calculateStaggerDelay(index, tiles.length);
+                
+                setTimeout(() => {
+                    // Clear inline styles and add animation class
+                    inner.style.transform = '';
+                    inner.style.opacity = '';
+                    tile.classList.add('spiral-in');
+                    
+                    // Remove spiral-in class after animation completes
+                    setTimeout(() => {
+                        tile.classList.remove('spiral-in');
+                    }, TIMINGS.spiralInDuration);
+                }, delay);
             });
             
             isBuilding = false;

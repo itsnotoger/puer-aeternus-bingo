@@ -89,6 +89,9 @@
         }
 
         .shuffle-btn {
+            display: inline-flex;
+            align-items: anchor-center;
+            justify-content: space-evenly;
             background: #27ae60;
             color: white;
             border: none;
@@ -98,6 +101,10 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
+        }
+
+        .shuffle-btn > :nth-child(odd) {
+            font-size: large;
         }
 
         .shuffle-btn:hover {
@@ -272,7 +279,7 @@
             <span class="item-count" id="itemCount">25</span>
             <button class="control-btn" onclick="increaseItems()">+</button>
         </div>
-        <button class="shuffle-btn" onclick="shuffleBoard()">🔀 Shuffle</button>
+        <button class="shuffle-btn" onclick="shuffleBoard()"><span>🔀</span><span>Shuffle</span></button>
     </div>
     
     <h1>🎭 Puer Aeternus Bingo</h1>

@@ -90,7 +90,7 @@
 
         .shuffle-btn {
             display: inline-flex;
-            align-items: anchor-center;
+            align-items: center;
             justify-content: space-evenly;
             background: #27ae60;
             color: white;
@@ -231,6 +231,41 @@
             animation: spiralIn var(--spiral-in-duration) ease-out;
         }
 
+        /* CHAOTIC DESTRUCTION PARTICLES */
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .particle.chaos {
+            background: var(--particle-color);
+            box-shadow: 0 0 3px var(--particle-glow);
+        }
+
+        @keyframes violentDestruction {
+            0% {
+                transform: translate(var(--start-x), var(--start-y)) 
+                           scale(var(--start-scale)) 
+                           rotateX(var(--rot-x-start)) 
+                           rotateY(var(--rot-y-start)) 
+                           rotateZ(var(--rot-z-start));
+                opacity: var(--start-opacity);
+            }
+            100% {
+                transform: translate(var(--end-x), var(--end-y)) 
+                           scale(0) 
+                           rotateX(var(--rot-x-end)) 
+                           rotateY(var(--rot-y-end)) 
+                           rotateZ(var(--rot-z-end));
+                opacity: 0;
+            }
+        }
+
+        .particle.chaos {
+            animation: violentDestruction var(--particle-duration) var(--particle-easing) forwards;
+        }
+
         .tile-back::before {
             content: '';
             position: absolute;
@@ -287,24 +322,67 @@
 
     <script>
         // ============================================================
-        // TIMING CONFIGURATION - Single source of truth, capisce?
+        // MASTER CONFIGURATION - Everything in one place, capisce?
         // ============================================================
         const TIMINGS = {
-            // CSS Animation durations (in milliseconds)
-            flipDuration: 600,          // How long the card flip takes
-            spiralOutDuration: 600,     // How long tiles spiral out
-            spiralInDuration: 500,      // How long tiles spiral in
-            shimmerDuration: 1500,      // Placeholder shimmer effect
+            // Card animations
+            flipDuration: 600,
+            spiralOutDuration: 600,
+            spiralInDuration: 500,
+            shimmerDuration: 1500,
             
-            // JavaScript timing values (in milliseconds)
-            flipbackWait: 300,          // Wait time before starting spiral out (if cards were flipped)
-            maxStaggerDelay: 200,       // Maximum delay for staggered animations
-            debounceDelay: 100,         // Debounce delay for rapid button clicks
-            spiralCompleteBuffer: 600,  // Extra time to ensure spiral completes
-            minPlaceholderDisplay: 500  // Minimum time to show placeholder animation (for that professional look)
+            // Sequence timing
+            flipbackWait: 300,
+            maxStaggerDelay: 200,
+            debounceDelay: 100,
+            spiralCompleteBuffer: 600,
+            minPlaceholderDisplay: 500
         };
 
-        // Inject timing values into CSS custom properties
+        const PARTICLE_CONFIG = {
+            chaos: {
+                // Particle counts and sizes
+                count: 30,
+                minSize: 3,
+                maxSize: 9,
+                
+                // Animation timing
+                minDuration: 350,
+                maxDuration: 550,
+                maxStartDelay: 50,  // Stagger particle spawn - tight sync!
+                
+                // Spawn area scaling (multiplier of tile size)
+                spawnRadiusMultiplier: 0.85,
+                
+                // Trajectory chaos
+                angleVariation: 0.8,        // How much particles can veer off (radians)
+                overshootMin: 0.6,          // Minimum overshoot past center
+                overshootMax: 1.8,          // Maximum overshoot past center
+                
+                // 3D rotation ranges (degrees)
+                rotationMin: -720,
+                rotationMax: 720,
+                
+                // Starting conditions
+                startScaleMin: 0.7,
+                startScaleMax: 1.3,
+                startOpacityMin: 0.7,
+                startOpacityMax: 1.0,
+                
+                // Color palette - mostly dark with hints of blue
+                colors: [
+                    { bg: 'rgba(20, 20, 35, 0.9)', glow: 'rgba(40, 40, 80, 0.5)' },
+                    { bg: 'rgba(30, 25, 40, 0.85)', glow: 'rgba(50, 40, 70, 0.4)' },
+                    { bg: 'rgba(15, 15, 25, 0.95)', glow: 'rgba(30, 30, 50, 0.6)' },
+                    { bg: 'rgba(25, 20, 45, 0.8)', glow: 'rgba(60, 50, 90, 0.3)' },
+                    { bg: 'rgba(40, 50, 80, 0.7)', glow: 'rgba(70, 90, 130, 0.4)' }
+                ],
+                
+                // Easing variety
+                easingFunctions: ['ease-in', 'ease-out', 'linear', 'ease-in-out']
+            }
+        };
+
         function initCSSVariables() {
             const root = document.documentElement;
             root.style.setProperty('--flip-duration', `${TIMINGS.flipDuration}ms`);
@@ -313,17 +391,12 @@
             root.style.setProperty('--shimmer-duration', `${TIMINGS.shimmerDuration}ms`);
         }
 
-        // Make TIMINGS available in console for live tweaking
-        // Usage: TIMINGS.flipDuration = 1000; initCSSVariables();
+        // Make configs tweakable in console
         window.TIMINGS = TIMINGS;
+        window.PARTICLE_CONFIG = PARTICLE_CONFIG;
         window.refreshCSSTimings = initCSSVariables;
-
-        // Initialize CSS variables on load
         initCSSVariables();
 
-        // ============================================================
-        // APPLICATION STATE
-        // ============================================================
         const DEFAULT_ITEMS = `Free Space
 Coffee Break
 Meeting Runs Late
@@ -369,7 +442,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
         let availableItems = [];
         let rebuildTimeout = null;
         let isBuilding = false;
-        let itemsLoadedOnce = false;  // Track if we've already fetched items.txt
+        let itemsLoadedOnce = false;
 
         // ============================================================
         // UTILITY FUNCTIONS
@@ -391,6 +464,100 @@ Push The Envelope`.split('\n').map(item => item.trim());
 
         function calculateStaggerDelay(index, totalTiles) {
             return Math.floor(((index + 1) / totalTiles) * TIMINGS.maxStaggerDelay);
+        }
+
+        function randomInRange(min, max) {
+            return min + Math.random() * (max - min);
+        }
+
+        // ============================================================
+        // CHAOTIC DESTRUCTION PARTICLE SYSTEM
+        // ============================================================
+        
+        function createChaoticDestruction(tile) {
+            const rect = tile.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const tileSize = Math.min(rect.width, rect.height);
+            const config = PARTICLE_CONFIG.chaos;
+            
+            const particles = [];
+            const spawnRadius = tileSize * config.spawnRadiusMultiplier;
+            
+            for (let i = 0; i < config.count; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle chaos';
+                
+                // Random square size
+                const size = randomInRange(config.minSize, config.maxSize);
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                
+                // Random dark color from palette
+                const colorData = config.colors[Math.floor(Math.random() * config.colors.length)];
+                particle.style.setProperty('--particle-color', colorData.bg);
+                particle.style.setProperty('--particle-glow', colorData.glow);
+                
+                // Starting position - chaotic spawn around the tile
+                const angle = Math.random() * Math.PI * 2;
+                const spawnDist = spawnRadius * randomInRange(0.3, 1.0);
+                const startX = Math.cos(angle) * spawnDist;
+                const startY = Math.sin(angle) * spawnDist;
+                
+                // End position - violent trajectories with angle variation and overshoot
+                const targetAngle = angle + (Math.random() - 0.5) * Math.PI * config.angleVariation;
+                const overshoot = randomInRange(config.overshootMin, config.overshootMax);
+                const endDist = -spawnDist * overshoot;
+                const endX = Math.cos(targetAngle) * endDist;
+                const endY = Math.sin(targetAngle) * endDist;
+                
+                // CRAZY 3D rotations - total mayhem!
+                const rotXStart = Math.random() * 360;
+                const rotYStart = Math.random() * 360;
+                const rotZStart = Math.random() * 360;
+                const rotXEnd = rotXStart + randomInRange(config.rotationMin, config.rotationMax);
+                const rotYEnd = rotYStart + randomInRange(config.rotationMin, config.rotationMax);
+                const rotZEnd = rotZStart + randomInRange(config.rotationMin, config.rotationMax);
+                
+                // Variable speeds
+                const duration = randomInRange(config.minDuration, config.maxDuration);
+                
+                // Different easing for each particle
+                const easing = config.easingFunctions[Math.floor(Math.random() * config.easingFunctions.length)];
+                
+                // Starting scale and opacity variation
+                const startScale = randomInRange(config.startScaleMin, config.startScaleMax);
+                const startOpacity = randomInRange(config.startOpacityMin, config.startOpacityMax);
+                
+                particle.style.left = `${centerX}px`;
+                particle.style.top = `${centerY}px`;
+                particle.style.setProperty('--start-x', `${startX}px`);
+                particle.style.setProperty('--start-y', `${startY}px`);
+                particle.style.setProperty('--end-x', `${endX}px`);
+                particle.style.setProperty('--end-y', `${endY}px`);
+                particle.style.setProperty('--rot-x-start', `${rotXStart}deg`);
+                particle.style.setProperty('--rot-y-start', `${rotYStart}deg`);
+                particle.style.setProperty('--rot-z-start', `${rotZStart}deg`);
+                particle.style.setProperty('--rot-x-end', `${rotXEnd}deg`);
+                particle.style.setProperty('--rot-y-end', `${rotYEnd}deg`);
+                particle.style.setProperty('--rot-z-end', `${rotZEnd}deg`);
+                particle.style.setProperty('--start-scale', startScale);
+                particle.style.setProperty('--start-opacity', startOpacity);
+                particle.style.setProperty('--particle-duration', `${duration}ms`);
+                particle.style.setProperty('--particle-easing', easing);
+                
+                // Tight stagger for better sync with card
+                const startDelay = Math.random() * config.maxStartDelay;
+                particle.style.animationDelay = `${startDelay}ms`;
+                
+                document.body.appendChild(particle);
+                particles.push(particle);
+            }
+            
+            // Clean up after the longest possible particle lifetime
+            setTimeout(() => {
+                particles.forEach(p => p.remove());
+            }, config.maxDuration + config.maxStartDelay + 100);
         }
 
         // ============================================================
@@ -438,7 +605,6 @@ Push The Envelope`.split('\n').map(item => item.trim());
             const board = document.getElementById('bingoBoard');
             const tiles = board.querySelectorAll('.bingo-tile');
             
-            // Step 1: Flip all marked cards back
             let hadFlippedCards = false;
             tiles.forEach(tile => {
                 if (tile.classList.contains('marked')) {
@@ -447,25 +613,25 @@ Push The Envelope`.split('\n').map(item => item.trim());
                 }
             });
             
-            // Step 2: Spiral out effect with stagger
             const spiralOutDelay = hadFlippedCards ? TIMINGS.flipbackWait : 0;
             setTimeout(() => {
                 tiles.forEach((tile, index) => {
                     setTimeout(() => {
                         tile.classList.add('spiral-out');
+                        // UNLEASH THE CHAOS!
+                        if (!tile.classList.contains('placeholder') && !tile.classList.contains('empty')) {
+                            createChaoticDestruction(tile);
+                        }
                     }, calculateStaggerDelay(index, tiles.length));
                 });
             }, spiralOutDelay);
             
-            // Step 3: Clear and show placeholders, then spiral in new tiles
             const lastTileDelay = calculateStaggerDelay(tiles.length - 1, tiles.length);
-            // Wait for: flipback delay + last tile starts + spiral animation completes
-            const totalWaitTime = spiralOutDelay + lastTileDelay + TIMINGS.spiralOutDuration + 100;
+            const totalWaitTime = spiralOutDelay + lastTileDelay + TIMINGS.spiralOutDuration + TIMINGS.spiralCompleteBuffer;
             
             setTimeout(() => {
                 renderPlaceholders();
                 
-                // Double RAF for clean render
                 requestAnimationFrame(() => {
                     requestAnimationFrame(() => {
                         populateBoard();
@@ -478,9 +644,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
         // BOARD RENDERING
         // ============================================================
 
-        // Load items from file - but only ONCE, capisce?
         async function loadItemsOnce() {
-            // Already got the goods? Fuggedaboutit!
             if (itemsLoadedOnce) {
                 return;
             }
@@ -508,7 +672,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
             }
             
             itemsLoadedOnce = true;
-            console.log(`Loaded ${availableItems.length} items from ${source} (one time only, baby!)`);
+            console.log(`Loaded ${availableItems.length} items from ${source}`);
         }
 
         function renderPlaceholders() {
@@ -520,7 +684,6 @@ Push The Envelope`.split('\n').map(item => item.trim());
             board.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
             
             board.innerHTML = '';
-            // Create invisible skeleton tiles to maintain grid structure
             for (let i = 0; i < targetSize; i++) {
                 const tile = document.createElement('div');
                 tile.className = 'bingo-tile placeholder';
@@ -535,21 +698,17 @@ Push The Envelope`.split('\n').map(item => item.trim());
             const board = document.getElementById('bingoBoard');
             const startTime = performance.now();
             
-            // Promise 1: Minimum animation time - gotta let people appreciate the show!
             const minAnimTime = new Promise(resolve => 
                 setTimeout(resolve, TIMINGS.minPlaceholderDisplay)
             );
             
-            // Promise 2: Load items (only first time, after that it's instant)
             const itemsPromise = loadItemsOnce();
             
-            // Wait for BOTH - the slower one sets the pace, capisce?
             await Promise.all([minAnimTime, itemsPromise]);
             
             const loadTime = Math.round(performance.now() - startTime);
-            console.log(`Board ready after ${loadTime}ms (minimum was ${TIMINGS.minPlaceholderDisplay}ms)`);
+            console.log(`Board ready after ${loadTime}ms`);
             
-            // Ensure item count doesn't exceed available items
             if (currentItemCount > availableItems.length) {
                 currentItemCount = availableItems.length;
             }
@@ -559,9 +718,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
             
             const targetSize = getNextSquare(allItems.length);
             const gridSize = Math.sqrt(targetSize);
-            console.log(`Creating ${gridSize}x${gridSize} board (${targetSize} tiles total)`);
             
-            // Pad items array with empty strings to fill grid
             const items = [...allItems];
             while (items.length < targetSize) {
                 items.push('');
@@ -569,7 +726,6 @@ Push The Envelope`.split('\n').map(item => item.trim());
             
             const shuffled = shuffle(items);
             
-            // Fill existing placeholder tiles with real content
             const tiles = board.querySelectorAll('.bingo-tile');
             shuffled.forEach((item, index) => {
                 if (tiles[index]) {
@@ -579,7 +735,6 @@ Push The Envelope`.split('\n').map(item => item.trim());
                     const inner = document.createElement('div');
                     inner.className = 'tile-inner';
                     
-                    // Set initial state INLINE to prevent flash - start invisible!
                     inner.style.transform = 'scale(0) rotate(-360deg)';
                     inner.style.opacity = '0';
                     
@@ -610,10 +765,8 @@ Push The Envelope`.split('\n').map(item => item.trim());
                 }
             });
             
-            // Force reflow so browser registers the inline styles
             board.offsetHeight;
             
-            // NOW trigger spiral-in animation on all tiles
             tiles.forEach((tile, index) => {
                 const inner = tile.querySelector('.tile-inner');
                 if (!inner) return;
@@ -621,12 +774,10 @@ Push The Envelope`.split('\n').map(item => item.trim());
                 const delay = calculateStaggerDelay(index, tiles.length);
                 
                 setTimeout(() => {
-                    // Clear inline styles and add animation class
                     inner.style.transform = '';
                     inner.style.opacity = '';
                     tile.classList.add('spiral-in');
                     
-                    // Remove spiral-in class after animation completes
                     setTimeout(() => {
                         tile.classList.remove('spiral-in');
                     }, TIMINGS.spiralInDuration);

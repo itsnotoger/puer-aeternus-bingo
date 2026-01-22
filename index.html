@@ -319,6 +319,9 @@
     
     <h1>🎭 Puer Aeternus Bingo</h1>
     <div class="bingo-container" id="bingoBoard"></div>
+    
+    <!-- Particle sandbox - keeps them particles from escapin'! -->
+    <div id="particleSandbox" style="position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 9999;"></div>
 
     <script>
         // ============================================================
@@ -342,10 +345,10 @@
                 // Particle counts and sizes
                 count: 30,
                 minSize: 3,
-                maxSize: 9,
+                maxSize: 8,
                 
                 // Animation timing
-                minDuration: 350,
+                minDuration: 450,
                 maxDuration: 550,
                 maxStartDelay: 50,  // Stagger particle spawn - tight sync!
                 
@@ -354,8 +357,8 @@
                 
                 // Trajectory chaos
                 angleVariation: 0.8,        // How much particles can veer off (radians)
-                overshootMin: 0.6,          // Minimum overshoot past center
-                overshootMax: 1.8,          // Maximum overshoot past center
+                overshootMin: 0.8,          // Minimum overshoot past center (distance muliplier)
+                overshootMax: 1.7,          // Maximum overshoot past center
                 
                 // 3D rotation ranges (degrees)
                 rotationMin: -720,
@@ -480,6 +483,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
             
             const particles = [];
             const spawnRadius = tileSize * config.spawnRadiusMultiplier;
+            const sandbox = document.getElementById('particleSandbox');
             
             // Calculate max particle lifetime for cleanup
             const maxParticleLifetime = config.maxStartDelay + config.maxDuration;
@@ -550,7 +554,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
                 const startDelay = Math.random() * config.maxStartDelay;
                 particle.style.animationDelay = `${startDelay}ms`;
                 
-                document.body.appendChild(particle);
+                sandbox.appendChild(particle);
                 particles.push(particle);
             }
             

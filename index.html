@@ -329,13 +329,11 @@
             flipDuration: 600,
             spiralOutDuration: 600,
             spiralInDuration: 500,
-            shimmerDuration: 1500,
             
             // Sequence timing
             flipbackWait: 300,
             maxStaggerDelay: 200,
             debounceDelay: 100,
-            spiralCompleteBuffer: 600,
             minPlaceholderDisplay: 500
         };
 
@@ -388,7 +386,6 @@
             root.style.setProperty('--flip-duration', `${TIMINGS.flipDuration}ms`);
             root.style.setProperty('--spiral-out-duration', `${TIMINGS.spiralOutDuration}ms`);
             root.style.setProperty('--spiral-in-duration', `${TIMINGS.spiralInDuration}ms`);
-            root.style.setProperty('--shimmer-duration', `${TIMINGS.shimmerDuration}ms`);
         }
 
         // Make configs tweakable in console
@@ -484,6 +481,9 @@ Push The Envelope`.split('\n').map(item => item.trim());
             const particles = [];
             const spawnRadius = tileSize * config.spawnRadiusMultiplier;
             
+            // Calculate max particle lifetime for cleanup
+            const maxParticleLifetime = config.maxStartDelay + config.maxDuration;
+            
             for (let i = 0; i < config.count; i++) {
                 const particle = document.createElement('div');
                 particle.className = 'particle chaos';
@@ -557,7 +557,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
             // Clean up after the longest possible particle lifetime
             setTimeout(() => {
                 particles.forEach(p => p.remove());
-            }, config.maxDuration + config.maxStartDelay + 100);
+            }, maxParticleLifetime);
         }
 
         // ============================================================
@@ -627,7 +627,11 @@ Push The Envelope`.split('\n').map(item => item.trim());
             }, spiralOutDelay);
             
             const lastTileDelay = calculateStaggerDelay(tiles.length - 1, tiles.length);
-            const totalWaitTime = spiralOutDelay + lastTileDelay + TIMINGS.spiralOutDuration + TIMINGS.spiralCompleteBuffer;
+            
+            // Wait for whichever finishes last: the card spiral OR the particles
+            const maxParticleLifetime = PARTICLE_CONFIG.chaos.maxStartDelay + PARTICLE_CONFIG.chaos.maxDuration;
+            const maxAnimationDuration = Math.max(TIMINGS.spiralOutDuration, maxParticleLifetime);
+            const totalWaitTime = spiralOutDelay + lastTileDelay + maxAnimationDuration;
             
             setTimeout(() => {
                 renderPlaceholders();

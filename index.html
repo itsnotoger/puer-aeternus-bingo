@@ -344,12 +344,12 @@
             chaos: {
                 // Particle counts and sizes
                 count: 30,
-                minSize: 3,
+                minSize: 4,
                 maxSize: 8,
                 
                 // Animation timing
-                minDuration: 500,
-                maxDuration: 750,
+                minDuration: 450,
+                maxDuration: 800,
                 maxStartDelay: 60,  // Stagger particle spawn - tight sync!
                 
                 // Spawn area scaling (multiplier of tile size)
@@ -357,8 +357,8 @@
                 
                 // Trajectory chaos
                 angleVariation: 0.8,        // How much particles can veer off (radians)
-                overshootMin: 0.9,          // Minimum overshoot past center (distance muliplier)
-                overshootMax: 2.5,          // Maximum overshoot past center
+                overshootMin: 0.5,          // Minimum overshoot past center (distance muliplier)
+                overshootMax: 4,          // Maximum overshoot past center
                 
                 // 3D rotation ranges (degrees)
                 rotationMin: -720,

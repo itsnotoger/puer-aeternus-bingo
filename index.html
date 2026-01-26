@@ -201,17 +201,6 @@
             transform: rotateY(165deg);
         }
 
-        @keyframes spiralOut {
-            0% {
-                transform: scale(1) rotate(0deg);
-                opacity: 1;
-            }
-            100% {
-                transform: scale(0) rotate(360deg);
-                opacity: 0;
-            }
-        }
-
         @keyframes spiralIn {
             0% {
                 transform: scale(0) rotate(-360deg);
@@ -223,15 +212,11 @@
             }
         }
 
-        .bingo-tile.spiral-out .tile-inner {
-            animation: spiralOut var(--spiral-out-duration) ease-in-out forwards;
-        }
-
         .bingo-tile.spiral-in .tile-inner {
             animation: spiralIn var(--spiral-in-duration) ease-out;
         }
 
-        /* CHAOTIC DESTRUCTION PARTICLES */
+                /* CHAOTIC DESTRUCTION PARTICLES */
         .particle {
             position: absolute;
             pointer-events: none;
@@ -264,6 +249,11 @@
 
         .particle.chaos {
             animation: violentDestruction var(--particle-duration) var(--particle-easing) forwards;
+        }
+
+        .card-fragment {
+            pointer-events: none;
+            z-index: 1000;
         }
 
         .tile-back::before {
@@ -330,7 +320,7 @@
         const TIMINGS = {
             // Card animations
             flipDuration: 600,
-            spiralOutDuration: 600,
+            ripDuration: 1000,
             spiralInDuration: 500,
             
             // Sequence timing
@@ -381,6 +371,18 @@
                 
                 // Easing variety
                 easingFunctions: ['ease-in', 'ease-out', 'linear', 'ease-in-out']
+            }
+        };
+        
+        const RIP_CONFIG = {
+            // How much cut points can deviate along perimeter (percent)
+            jitter: 8,
+            
+            // Fragment movement distances (pixels)
+            movement: {
+                bottomLeft: { x: -100, y: 50 },
+                bottomRight: { x: 100, y: 50 },
+                top: { x: 0, y: -100 }
             }
         };
 
@@ -447,7 +449,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
         // ============================================================
         // UTILITY FUNCTIONS
         // ============================================================
-        
+
         function shuffle(array) {
             const arr = [...array];
             for (let i = arr.length - 1; i > 0; i--) {
@@ -471,9 +473,135 @@ Push The Envelope`.split('\n').map(item => item.trim());
         }
 
         // ============================================================
+        // CARD RIPPING EFFECT - Trifold tear from center
+        // ============================================================
+
+        function createCardRip(tile) {
+            const rect = tile.getBoundingClientRect();
+            const sandbox = document.getElementById('particleSandbox');
+            
+            // Get the tile's current visual state (front or back)
+            const isFlipped = tile.classList.contains('marked');
+            const sourceElement = isFlipped ? 
+                tile.querySelector('.tile-back') : 
+                tile.querySelector('.tile-front');
+            
+            if (!sourceElement) return;
+            
+            // Hide the original tile immediately
+            tile.style.opacity = '0';
+            
+            const width = rect.width;
+            const height = rect.height;
+            
+            // Randomization amount from config
+            const jitter = RIP_CONFIG.jitter;
+            
+            // Define the 5 shared cut points with randomization
+            // Each cut point can shift along the perimeter of the card
+            
+            // Top-left corner cut (shifts along top and left edges)
+            const tlX = randomInRange(-jitter, jitter);  // shift along top edge
+            const tlY = randomInRange(-jitter, jitter);  // shift along left edge
+            
+            // Top-right corner cut (shifts along top and right edges)
+            const trX = 100 + randomInRange(-jitter, jitter);  // shift along top edge
+            const trY = randomInRange(-jitter, jitter);        // shift along right edge
+            
+            // Center point (can shift in any direction)
+            const centerX = 50 + randomInRange(-jitter, jitter);
+            const centerY = 50 + randomInRange(-jitter, jitter);
+            
+            // Bottom-center cut (shifts along bottom edge)
+            const bcX = 50 + randomInRange(-jitter, jitter);
+            const bcY = 100;  // stays on bottom edge
+            
+            // Bottom-left corner (fixed)
+            const blX = 0;
+            const blY = 100;
+            
+            // Bottom-right corner (fixed)
+            const brX = 100;
+            const brY = 100;
+            
+            // Create 3 fragments with randomized but consistent polygon clipping paths
+            // IMPORTANT: Always include actual corners to prevent edge clipping!
+            
+            // Fragment 1: Bottom-left piece 
+            // Path: actual TL corner → jittered TL point → Center → BC → BL corner → actual TL corner
+            const fragment1 = createFragment(sourceElement, rect, isFlipped);
+            fragment1.style.clipPath = `polygon(0% 0%, ${tlX}% ${tlY}%, ${centerX}% ${centerY}%, ${bcX}% ${bcY}%, 0% 100%)`;
+            fragment1.dataset.direction = 'bottom-left';
+            
+            // Fragment 2: Bottom-right piece
+            // Path: Center → jittered TR point → actual TR corner → BR corner → BC → Center
+            const fragment2 = createFragment(sourceElement, rect, isFlipped);
+            fragment2.style.clipPath = `polygon(${centerX}% ${centerY}%, ${trX}% ${trY}%, 100% 0%, 100% 100%, ${bcX}% ${bcY}%)`;
+            fragment2.dataset.direction = 'bottom-right';
+            
+            // Fragment 3: Top piece
+            // Path: actual TL corner → jittered TL point → Center → jittered TR point → actual TR corner → TL corner
+            const fragment3 = createFragment(sourceElement, rect, isFlipped);
+            fragment3.style.clipPath = `polygon(0% 0%, ${tlX}% ${tlY}%, ${centerX}% ${centerY}%, ${trX}% ${trY}%, 100% 0%)`;
+            fragment3.dataset.direction = 'top';
+            
+            const fragments = [fragment1, fragment2, fragment3];
+            fragments.forEach(f => sandbox.appendChild(f));
+            
+            // Animate fragments apart slowly and controlled - start from position 0
+            fragments.forEach(f => {
+                f.style.transform = 'translate(0px, 0px)';
+            });
+            
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    const move = RIP_CONFIG.movement;
+                    fragment1.style.transform = `translate(${move.bottomLeft.x}px, ${move.bottomLeft.y}px)`;
+                    fragment2.style.transform = `translate(${move.bottomRight.x}px, ${move.bottomRight.y}px)`;
+                    fragment3.style.transform = `translate(${move.top.x}px, ${move.top.y}px)`;
+                });
+            });
+            
+            // Clean up after animation
+            setTimeout(() => {
+                fragments.forEach(f => f.remove());
+            }, TIMINGS.ripDuration);
+        }
+        
+        function createFragment(sourceElement, rect, isFlipped) {
+            const fragment = document.createElement('div');
+            fragment.className = 'card-fragment';
+            
+            // Copy all styles from source
+            const computedStyle = window.getComputedStyle(sourceElement);
+            fragment.style.position = 'absolute';
+            fragment.style.left = rect.left + 'px';
+            fragment.style.top = rect.top + 'px';
+            fragment.style.width = rect.width + 'px';
+            fragment.style.height = rect.height + 'px';
+            fragment.style.background = computedStyle.background;
+            fragment.style.border = computedStyle.border;
+            fragment.style.borderRadius = computedStyle.borderRadius;
+            fragment.style.color = computedStyle.color;
+            fragment.style.fontSize = computedStyle.fontSize;
+            fragment.style.fontWeight = computedStyle.fontWeight;
+            fragment.style.display = 'flex';
+            fragment.style.alignItems = 'center';
+            fragment.style.justifyContent = 'center';
+            fragment.style.textAlign = 'center';
+            fragment.style.padding = computedStyle.padding;
+            fragment.style.transition = `transform ${TIMINGS.ripDuration}ms ease-out`;
+            fragment.style.willChange = 'transform';
+            fragment.textContent = sourceElement.textContent;
+            
+            return fragment;
+        }
+
+
+        // ============================================================
         // CHAOTIC DESTRUCTION PARTICLE SYSTEM
         // ============================================================
-        
+
         function createChaoticDestruction(tile) {
             const rect = tile.getBoundingClientRect();
             const centerX = rect.left + rect.width / 2;
@@ -550,7 +678,6 @@ Push The Envelope`.split('\n').map(item => item.trim());
                 particle.style.setProperty('--particle-duration', `${duration}ms`);
                 particle.style.setProperty('--particle-easing', easing);
                 
-                // Tight stagger for better sync with card
                 const startDelay = Math.random() * config.maxStartDelay;
                 particle.style.animationDelay = `${startDelay}ms`;
                 
@@ -558,7 +685,6 @@ Push The Envelope`.split('\n').map(item => item.trim());
                 particles.push(particle);
             }
             
-            // Clean up after the longest possible particle lifetime
             setTimeout(() => {
                 particles.forEach(p => p.remove());
             }, maxParticleLifetime);
@@ -621,7 +747,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
             setTimeout(() => {
                 tiles.forEach((tile, index) => {
                     setTimeout(() => {
-                        tile.classList.add('spiral-out');
+                        createCardRip(tile);
                         // UNLEASH THE CHAOS!
                         if (!tile.classList.contains('placeholder') && !tile.classList.contains('empty')) {
                             createChaoticDestruction(tile);
@@ -631,10 +757,10 @@ Push The Envelope`.split('\n').map(item => item.trim());
             }, spiralOutDelay);
             
             const lastTileDelay = calculateStaggerDelay(tiles.length - 1, tiles.length);
-            
-            // Wait for whichever finishes last: the card spiral OR the particles
+                        
+            // Wait for whichever finishes last: the card rip OR the particles
             const maxParticleLifetime = PARTICLE_CONFIG.chaos.maxStartDelay + PARTICLE_CONFIG.chaos.maxDuration;
-            const maxAnimationDuration = Math.max(TIMINGS.spiralOutDuration, maxParticleLifetime);
+            const maxAnimationDuration = Math.max(TIMINGS.ripDuration, maxParticleLifetime);
             const totalWaitTime = spiralOutDelay + lastTileDelay + maxAnimationDuration;
             
             setTimeout(() => {

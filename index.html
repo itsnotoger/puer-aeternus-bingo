@@ -611,7 +611,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
                 ) * (Math.random() < 0.5 ? 1 : -1); // Random spin direction too!
                 
                 // Random duration for THIS fragment - some fast, some slow!
-                const fragmentDuration = randomInRange(minRipDuration, maxRipDuration);
+                const fragmentDuration = randomInRange(TIMINGS.minRipDuration, TIMINGS.maxRipDuration);
                 
                 // Generate keyframes along a REAL spiral path!
                 const keyframes = [];

@@ -575,6 +575,9 @@ Push The Envelope`.split('\n').map(item => item.trim());
             const cardCenterX = rect.left + rect.width / 2;
             const cardCenterY = rect.top + rect.height / 2;
             
+            // Random spiral direction - some go clockwise, some counterclockwise!
+            const spiralDirection = Math.random() < 0.5 ? 1 : -1;
+            
             fragmentData.forEach(({ fragment, centroid }) => {
                 // Transform origin is THE CENTROID
                 fragment.style.transformOrigin = `${centroid.x}% ${centroid.y}%`;
@@ -595,11 +598,6 @@ Push The Envelope`.split('\n').map(item => item.trim());
                 // Random duration for THIS fragment - some fast, some slow!
                 const fragmentDuration = randomInRange(TIMINGS.minRipDuration, TIMINGS.maxRipDuration);
                 const durationInSeconds = fragmentDuration / 1000;
-                
-                // Add VARIATION to each fragment - this is the SPICE!
-                
-                // Random spiral direction - some go clockwise, some counterclockwise!
-                const spiralDirection = Math.random() < 0.5 ? 1 : -1;
                 
                 // Calculate actual motion based on SPEED and DURATION
                 // This is the KEY - now duration and speed are INDEPENDENT!

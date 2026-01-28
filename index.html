@@ -359,15 +359,18 @@
         
         const RIP_CONFIG = {
             jitter: 8,
-            vortex: {
-                // How much them fragments spin as they fall in - keep it subtle!
-                rotationDegreesMin: 120,
-                rotationDegreesMax: 270,
-                // How many times to spiral around before hitting center
-                spiralRevolutionsMin: 1.0,
-                spiralRevolutionsMax: 2.0,
+            vortex: {                
+                // Fragment rotation speed (degrees per second)
+                rotationSpeedMin: 180,
+                rotationSpeedMax: 360,
+                
+                // Spiral/orbital speed (revolutions per second around center)
+                orbitalSpeedMin: 0.8,
+                orbitalSpeedMax: 1.5,
+                
                 // Don't go ALL the way to center - leave a gap
                 centerGapPercent: 0.08,
+                
                 // Number of keyframes for smooth spiral
                 spiralKeyframes: 16,
             }
@@ -589,29 +592,34 @@ Push The Envelope`.split('\n').map(item => item.trim());
                 // CRITICAL: It's the OPPOSITE of the vector TO center!
                 const startAngle = Math.atan2(-toCenterY, -toCenterX);
                 
+                // Random duration for THIS fragment - some fast, some slow!
+                const fragmentDuration = randomInRange(TIMINGS.minRipDuration, TIMINGS.maxRipDuration);
+                const durationInSeconds = fragmentDuration / 1000;
+                
                 // Add VARIATION to each fragment - this is the SPICE!
                 
                 // Random spiral direction - some go clockwise, some counterclockwise!
                 const spiralDirection = Math.random() < 0.5 ? 1 : -1;
                 
-                // Random number of revolutions - keeps it unpredictable
-                const revolutions = randomInRange(
-                    RIP_CONFIG.vortex.spiralRevolutionsMin,
-                    RIP_CONFIG.vortex.spiralRevolutionsMax
+                // Calculate actual motion based on SPEED and DURATION
+                // This is the KEY - now duration and speed are INDEPENDENT!
+                const orbitalSpeed = randomInRange(
+                    RIP_CONFIG.vortex.orbitalSpeedMin,
+                    RIP_CONFIG.vortex.orbitalSpeedMax
                 );
-                const totalRotation = revolutions * Math.PI * 2 * spiralDirection;
+                const totalRevolutions = orbitalSpeed * durationInSeconds;
+                const totalRotation = totalRevolutions * Math.PI * 2 * spiralDirection;
                 
                 // Don't go all the way to center - leave a gap
                 const finalDistance = distance * RIP_CONFIG.vortex.centerGapPercent;
                 
-                // Random spin for the fragment itself - each one's different!
-                const fragmentSpin = randomInRange(
-                    RIP_CONFIG.vortex.rotationDegreesMin,
-                    RIP_CONFIG.vortex.rotationDegreesMax
+                // Random spin speed for the fragment itself - each one's different!
+                const rotationSpeed = randomInRange(
+                    RIP_CONFIG.vortex.rotationSpeedMin,
+                    RIP_CONFIG.vortex.rotationSpeedMax
                 ) * (Math.random() < 0.5 ? 1 : -1); // Random spin direction too!
                 
-                // Random duration for THIS fragment - some fast, some slow!
-                const fragmentDuration = randomInRange(TIMINGS.minRipDuration, TIMINGS.maxRipDuration);
+                const totalFragmentSpin = rotationSpeed * durationInSeconds;
                 
                 // Generate keyframes along a REAL spiral path!
                 const keyframes = [];
@@ -633,7 +641,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
                     const y = y_card + toCenterY;
                     
                     // Smooth rotation and scale
-                    const currentRotation = fragmentSpin * t;
+                    const currentRotation = totalFragmentSpin * t;
                     const currentScale = 1 - t;  // Shrink to 0
                     const currentOpacity = Math.max(0, 1 - t * 1.2);  // Fade out near the end
                     
@@ -685,7 +693,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
             
             return fragment;
         }
-        
+
         // ============================================================
         // CHAOTIC DESTRUCTION PARTICLE SYSTEM
         // ============================================================

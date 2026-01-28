@@ -577,6 +577,9 @@ Push The Envelope`.split('\n').map(item => item.trim());
             
             // Random spiral direction - some go clockwise, some counterclockwise!
             const spiralDirection = Math.random() < 0.5 ? 1 : -1;
+
+            const fragmentDuration = randomInRange(TIMINGS.minRipDuration, TIMINGS.maxRipDuration);
+            const durationInSeconds = fragmentDuration / 1000;
             
             fragmentData.forEach(({ fragment, centroid }) => {
                 // Transform origin is THE CENTROID
@@ -594,10 +597,6 @@ Push The Envelope`.split('\n').map(item => item.trim());
                 // Starting angle - this is where the fragment IS relative to center
                 // CRITICAL: It's the OPPOSITE of the vector TO center!
                 const startAngle = Math.atan2(-toCenterY, -toCenterX);
-                
-                // Random duration for THIS fragment - some fast, some slow!
-                const fragmentDuration = randomInRange(TIMINGS.minRipDuration, TIMINGS.maxRipDuration);
-                const durationInSeconds = fragmentDuration / 1000;
                 
                 // Calculate actual motion based on SPEED and DURATION
                 // This is the KEY - now duration and speed are INDEPENDENT!

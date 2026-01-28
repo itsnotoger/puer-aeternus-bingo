@@ -359,20 +359,23 @@
         
         const RIP_CONFIG = {
             jitter: 8,
-            vortex: {                
-                // Fragment rotation speed (degrees per second)
-                rotationSpeedMin: 180,
-                rotationSpeedMax: 360,
+            vortex: {
+                // Fragment rotation speed RELATIVE to orbital motion (degrees per second)
+                // 0 = maintains orientation toward center as it orbits (natural)
+                // Positive = spins faster than orbit (spins "with" the vortex)
+                // Negative = spins slower than orbit (spins "against" the vortex)
+                relativeRotationSpeedMin: -90,
+                relativeRotationSpeedMax: 180,
                 
                 // Spiral/orbital speed (revolutions per second around center)
                 orbitalSpeedMin: 0.8,
                 orbitalSpeedMax: 1.5,
                 
                 // Don't go ALL the way to center - leave a gap
-                centerGapPercent: 0.08,
+                centerGapPercent: 0.1,
                 
                 // Number of keyframes for smooth spiral
-                spiralKeyframes: 16,
+                spiralKeyframes: 32,
             }
         };
 
@@ -597,7 +600,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
                 // Starting angle - this is where the fragment IS relative to center
                 // CRITICAL: It's the OPPOSITE of the vector TO center!
                 const startAngle = Math.atan2(-toCenterY, -toCenterX);
-                
+                                
                 // Calculate actual motion based on SPEED and DURATION
                 // This is the KEY - now duration and speed are INDEPENDENT!
                 const orbitalSpeed = randomInRange(
@@ -610,13 +613,20 @@ Push The Envelope`.split('\n').map(item => item.trim());
                 // Don't go all the way to center - leave a gap
                 const finalDistance = distance * RIP_CONFIG.vortex.centerGapPercent;
                 
-                // Random spin speed for the fragment itself - each one's different!
-                const rotationSpeed = randomInRange(
-                    RIP_CONFIG.vortex.rotationSpeedMin,
-                    RIP_CONFIG.vortex.rotationSpeedMax
-                ) * (Math.random() < 0.5 ? 1 : -1); // Random spin direction too!
+                // Here's the BEAUTIFUL part - rotation RELATIVE to the spiral!
+                // When you orbit, you're already rotating just to face the center
+                // The "natural" rotation speed is exactly the orbital speed
+                const naturalRotationSpeed = orbitalSpeed * 360 * spiralDirection; // deg/sec
                 
-                const totalFragmentSpin = rotationSpeed * durationInSeconds;
+                // User-specified rotation is ADDED to the natural rotation
+                const relativeRotationSpeed = randomInRange(
+                    RIP_CONFIG.vortex.relativeRotationSpeedMin,
+                    RIP_CONFIG.vortex.relativeRotationSpeedMax
+                );
+                
+                // Total rotation = natural (to maintain orientation) + relative (extra spin)
+                const actualRotationSpeed = naturalRotationSpeed + relativeRotationSpeed;
+                const totalFragmentSpin = actualRotationSpeed * durationInSeconds;
                 
                 // Generate keyframes along a REAL spiral path!
                 const keyframes = [];

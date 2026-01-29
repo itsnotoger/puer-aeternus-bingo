@@ -378,6 +378,13 @@
                 centerGapPercent: 0.1,
 
                 opacityStart: 0.7, // when to start fading (0=start, 1=end)
+
+                // Acceleration curve - controls how fast it speeds up
+                // 1 = linear (constant speed)
+                // 2 = quadratic (gentle acceleration)
+                // 3 = cubic (strong acceleration)
+                // 1.5 = sweet spot between gentle and strong
+                easePower: 2,
                 
                 // Number of keyframes for smooth spiral
                 spiralKeyframes: 32,
@@ -584,7 +591,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
             // Calculate the ACTUAL center of the card in screen coordinates
             const cardCenterX = rect.left + rect.width / 2;
             const cardCenterY = rect.top + rect.height / 2;
-
+            
             const fragmentDuration = randomInRange(TIMINGS.minRipDuration, TIMINGS.maxRipDuration);
             const durationInSeconds = fragmentDuration / 1000;
 
@@ -637,13 +644,11 @@ Push The Envelope`.split('\n').map(item => item.trim());
                 const keyframes = [];
                 const numSteps = vortex.spiralKeyframes;
                 
-                // Easing function for acceleration - slow start, FAST finish!
-                // This makes it readable at first, then WHOOSH into the center
-                const easeInCubic = (t) => t * t * t;
+                const easeIn = (t) => Math.pow(t, vortex.easePower);
                 
                 for (let i = 0; i <= numSteps; i++) {
                     const t = i / numSteps;  // 0 to 1, linear progression through time
-                    const t_eased = easeInCubic(t);  // 0 to 1, but ACCELERATING
+                    const t_eased = easeIn(t);  // 0 to 1, but ACCELERATING
                     
                     // Use EASED t for the inward motion - starts slow, ends FAST!
                     const currentDistance = distance - (distance - finalDistance) * t_eased;

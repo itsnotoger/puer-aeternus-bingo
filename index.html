@@ -367,10 +367,12 @@
                 // Negative = spins slower than orbit (spins "against" the vortex)
                 relativeRotationSpeedMin: -90,
                 relativeRotationSpeedMax: 180,
+                fragmentRotationVariation: 30,
                 
                 // Spiral/orbital speed (revolutions per second around center)
                 orbitalSpeedMin: 0.8,
                 orbitalSpeedMax: 1.5,
+                fragmentOrbitVariation: 0.1,
                 
                 // Don't go ALL the way to center - leave a gap
                 centerGapPercent: 0.1,
@@ -465,14 +467,15 @@ Push The Envelope`.split('\n').map(item => item.trim());
             return min + Math.random() * (max - min);
         }
 
-        // Convert point array to polygon string - clean and simple!
         function pointsToPolygon(points) {
             return `polygon(${points.map(p => `${p.x}% ${p.y}%`).join(', ')})`;
         }
 
-        // Calculate the center of gravity for a polygon - NO STRING PARSING!
         function calculatePolygonCentroid(points) {
-            if (points.length < 3) return { x: 50, y: 50 }; // fallback
+            if (points.length < 3) {
+                console.warn('using fallback centroid');
+                return { x: 50, y: 50 };
+            }
             
             // Calculate centroid using the proper formula - no shortcuts!
             let area = 0;
@@ -500,6 +503,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
         function createCardRip(tile) {
             const rect = tile.getBoundingClientRect();
             const sandbox = document.getElementById('particleSandbox');
+            const vortex = RIP_CONFIG.vortex;
             
             const isFlipped = tile.classList.contains('marked');
             const sourceElement = isFlipped ? 
@@ -581,6 +585,14 @@ Push The Envelope`.split('\n').map(item => item.trim());
 
             const fragmentDuration = randomInRange(TIMINGS.minRipDuration, TIMINGS.maxRipDuration);
             const durationInSeconds = fragmentDuration / 1000;
+
+            const cardOrbitalSpeed = randomInRange(vortex.orbitalSpeedMin, vortex.orbitalSpeedMax);
+
+            // User-specified rotation is ADDED to the natural rotation
+            const cardRelativeRotationSpeed = randomInRange(
+                vortex.relativeRotationSpeedMin,
+                vortex.relativeRotationSpeedMax
+            );
             
             fragmentData.forEach(({ fragment, centroid }) => {
                 // Transform origin is THE CENTROID
@@ -601,26 +613,19 @@ Push The Envelope`.split('\n').map(item => item.trim());
                                 
                 // Calculate actual motion based on SPEED and DURATION
                 // This is the KEY - now duration and speed are INDEPENDENT!
-                const orbitalSpeed = randomInRange(
-                    RIP_CONFIG.vortex.orbitalSpeedMin,
-                    RIP_CONFIG.vortex.orbitalSpeedMax
-                );
+                const orbitalSpeed = cardOrbitalSpeed + randomInRange(-vortex.fragmentOrbitVariation, vortex.fragmentOrbitVariation);
                 const totalRevolutions = orbitalSpeed * durationInSeconds;
-                const totalRotation = totalRevolutions * Math.PI * 2 * RIP_CONFIG.vortex.spiralDirection;
+                const totalRotation = totalRevolutions * Math.PI * 2 * vortex.spiralDirection;
                 
                 // Don't go all the way to center - leave a gap
-                const finalDistance = distance * RIP_CONFIG.vortex.centerGapPercent;
+                const finalDistance = distance * vortex.centerGapPercent;
                 
-                // Here's the BEAUTIFUL part - rotation RELATIVE to the spiral!
+                // rotation RELATIVE to the spiral!
                 // When you orbit, you're already rotating just to face the center
                 // The "natural" rotation speed is exactly the orbital speed
-                const naturalRotationSpeed = orbitalSpeed * 360 * RIP_CONFIG.vortex.spiralDirection; // deg/sec
-                
-                // User-specified rotation is ADDED to the natural rotation
-                const relativeRotationSpeed = randomInRange(
-                    RIP_CONFIG.vortex.relativeRotationSpeedMin,
-                    RIP_CONFIG.vortex.relativeRotationSpeedMax
-                );
+                const naturalRotationSpeed = orbitalSpeed * 360 * vortex.spiralDirection; // deg/sec
+
+                const relativeRotationSpeed = cardRelativeRotationSpeed + randomInRange(-vortex.fragmentRotationVariation, vortex.fragmentRotationVariation);
                 
                 // Total rotation = natural (to maintain orientation) + relative (extra spin)
                 const actualRotationSpeed = naturalRotationSpeed + relativeRotationSpeed;
@@ -628,7 +633,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
                 
                 // Generate keyframes along a REAL spiral path!
                 const keyframes = [];
-                const numSteps = RIP_CONFIG.vortex.spiralKeyframes;
+                const numSteps = vortex.spiralKeyframes;
                 
                 for (let i = 0; i <= numSteps; i++) {
                     const t = i / numSteps;  // 0 to 1
@@ -832,7 +837,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
                 }
             });
             
-            const spiralOutDelay = hadFlippedCards ? TIMINGS.flipbackWait : 0;
+            const flipBackDelay = hadFlippedCards ? TIMINGS.flipbackWait : 0;
             setTimeout(() => {
                 tiles.forEach((tile, index) => {
                     setTimeout(() => {
@@ -842,12 +847,12 @@ Push The Envelope`.split('\n').map(item => item.trim());
                         }
                     }, calculateStaggerDelay(index, tiles.length));
                 });
-            }, spiralOutDelay);
+            }, flipBackDelay);
             
             const lastTileDelay = calculateStaggerDelay(tiles.length - 1, tiles.length);
             const maxParticleLifetime = PARTICLE_CONFIG.chaos.maxStartDelay + PARTICLE_CONFIG.chaos.maxDuration;
             const maxAnimationDuration = Math.max(TIMINGS.maxRipDuration, maxParticleLifetime);
-            const totalWaitTime = spiralOutDelay + lastTileDelay + maxAnimationDuration;
+            const totalWaitTime = flipBackDelay + lastTileDelay + maxAnimationDuration;
             
             setTimeout(() => {
                 renderPlaceholders();

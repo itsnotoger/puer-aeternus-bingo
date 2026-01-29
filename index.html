@@ -668,8 +668,8 @@ Push The Envelope`.split('\n').map(item => item.trim());
                     
                     // Opacity - fade LATE, not early! Keep it visible longer!
                     let currentOpacity = 1;
-                    if (t > vortex.opacityStart) {
-                        const fadeProgress = (t - vortex.opacityStart) / (1 - vortex.opacityStart);
+                    if (t_eased > vortex.opacityStart) {
+                        const fadeProgress = (t_eased - vortex.opacityStart) / (1 - vortex.opacityStart);
                         currentOpacity = 1 - fadeProgress;
                     }
                     
@@ -721,7 +721,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
             
             return fragment;
         }
-        
+
         // ============================================================
         // CHAOTIC DESTRUCTION PARTICLE SYSTEM
         // ============================================================

@@ -360,6 +360,7 @@
         const RIP_CONFIG = {
             jitter: 8,
             vortex: {
+                spiralDirection: 1,
                 // Fragment rotation speed RELATIVE to orbital motion (degrees per second)
                 // 0 = maintains orientation toward center as it orbits (natural)
                 // Positive = spins faster than orbit (spins "with" the vortex)
@@ -577,9 +578,6 @@ Push The Envelope`.split('\n').map(item => item.trim());
             // Calculate the ACTUAL center of the card in screen coordinates
             const cardCenterX = rect.left + rect.width / 2;
             const cardCenterY = rect.top + rect.height / 2;
-            
-            // Random spiral direction - some go clockwise, some counterclockwise!
-            const spiralDirection = Math.random() < 0.5 ? 1 : -1;
 
             const fragmentDuration = randomInRange(TIMINGS.minRipDuration, TIMINGS.maxRipDuration);
             const durationInSeconds = fragmentDuration / 1000;
@@ -608,7 +606,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
                     RIP_CONFIG.vortex.orbitalSpeedMax
                 );
                 const totalRevolutions = orbitalSpeed * durationInSeconds;
-                const totalRotation = totalRevolutions * Math.PI * 2 * spiralDirection;
+                const totalRotation = totalRevolutions * Math.PI * 2 * RIP_CONFIG.vortex.spiralDirection;
                 
                 // Don't go all the way to center - leave a gap
                 const finalDistance = distance * RIP_CONFIG.vortex.centerGapPercent;
@@ -616,7 +614,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
                 // Here's the BEAUTIFUL part - rotation RELATIVE to the spiral!
                 // When you orbit, you're already rotating just to face the center
                 // The "natural" rotation speed is exactly the orbital speed
-                const naturalRotationSpeed = orbitalSpeed * 360 * spiralDirection; // deg/sec
+                const naturalRotationSpeed = orbitalSpeed * 360 * RIP_CONFIG.vortex.spiralDirection; // deg/sec
                 
                 // User-specified rotation is ADDED to the natural rotation
                 const relativeRotationSpeed = randomInRange(

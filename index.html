@@ -664,7 +664,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
                     // Opacity - fade LATE, not early! Keep it visible longer!
                     let currentOpacity = 1;
                     if (t > vortex.opacityStart) {
-                        const fadeProgress = (t - opacityStart) / (1 - opacityStart);
+                        const fadeProgress = (t - vortex.opacityStart) / (1 - vortex.opacityStart);
                         currentOpacity = 1 - fadeProgress;
                     }
                     

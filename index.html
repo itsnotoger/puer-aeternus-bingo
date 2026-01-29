@@ -335,7 +335,7 @@
                 maxSize: 8,
                 minDuration: 500,
                 maxDuration: 1050,
-                maxStartDelay: 60,
+                maxStartDelay: 100,
                 spawnRadiusMultiplier: 0.85,
                 angleVariationRad: 0.8,
                 overshootMinMult: 0.5,
@@ -358,7 +358,7 @@
         };
         
         const RIP_CONFIG = {
-            jitter: 8,
+            jitter: 15,
             vortex: {
                 spiralDirection: 1,
                 // Fragment rotation speed RELATIVE to orbital motion (degrees per second)
@@ -371,23 +371,23 @@
                 
                 // Spiral/orbital speed (revolutions per second around center)
                 orbitalSpeedMin: 0.7,
-                orbitalSpeedMax: 0.8,
-                fragmentOrbitVariation: 0.1,
+                orbitalSpeedMax: 1.0,
+                fragmentOrbitVariation: 0.2,
                 
                 // Don't go ALL the way to center - leave a gap
-                centerGapPercent: 0.1,
+                centerGapPercent: 0.2,
 
-                opacityStart: 0.7, // when to start fading (0=start, 1=end)
+                opacityStart: 0.15, // when to start fading (0=start, 1=end)
 
                 // Acceleration curve - controls how fast it speeds up
                 // 1 = linear (constant speed)
                 // 2 = quadratic (gentle acceleration)
                 // 3 = cubic (strong acceleration)
                 // 1.5 = sweet spot between gentle and strong
-                easePower: 2,
+                easePower: 1.6,
                 
                 // Number of keyframes for smooth spiral
-                spiralKeyframes: 32,
+                spiralKeyframes: 20,
             }
         };
 

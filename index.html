@@ -376,6 +376,8 @@
                 
                 // Don't go ALL the way to center - leave a gap
                 centerGapPercent: 0.1,
+
+                opacityStart: 0.7, // when to start fading (0=start, 1=end)
                 
                 // Number of keyframes for smooth spiral
                 spiralKeyframes: 32,
@@ -610,7 +612,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
                 // Starting angle - this is where the fragment IS relative to center
                 // CRITICAL: It's the OPPOSITE of the vector TO center!
                 const startAngle = Math.atan2(-toCenterY, -toCenterX);
-                                
+                
                 // Calculate actual motion based on SPEED and DURATION
                 // This is the KEY - now duration and speed are INDEPENDENT!
                 const orbitalSpeed = cardOrbitalSpeed + randomInRange(-vortex.fragmentOrbitVariation, vortex.fragmentOrbitVariation);
@@ -624,7 +626,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
                 // When you orbit, you're already rotating just to face the center
                 // The "natural" rotation speed is exactly the orbital speed
                 const naturalRotationSpeed = orbitalSpeed * 360 * vortex.spiralDirection; // deg/sec
-
+                
                 const relativeRotationSpeed = cardRelativeRotationSpeed + randomInRange(-vortex.fragmentRotationVariation, vortex.fragmentRotationVariation);
                 
                 // Total rotation = natural (to maintain orientation) + relative (extra spin)
@@ -635,12 +637,17 @@ Push The Envelope`.split('\n').map(item => item.trim());
                 const keyframes = [];
                 const numSteps = vortex.spiralKeyframes;
                 
+                // Easing function for acceleration - slow start, FAST finish!
+                // This makes it readable at first, then WHOOSH into the center
+                const easeInCubic = (t) => t * t * t;
+                
                 for (let i = 0; i <= numSteps; i++) {
-                    const t = i / numSteps;  // 0 to 1
+                    const t = i / numSteps;  // 0 to 1, linear progression through time
+                    const t_eased = easeInCubic(t);  // 0 to 1, but ACCELERATING
                     
-                    // Spiral inward: distance decreases, angle increases
-                    const currentDistance = distance - (distance - finalDistance) * t;
-                    const currentAngle = startAngle + totalRotation * t;
+                    // Use EASED t for the inward motion - starts slow, ends FAST!
+                    const currentDistance = distance - (distance - finalDistance) * t_eased;
+                    const currentAngle = startAngle + totalRotation * t_eased;
                     
                     // Convert polar to cartesian (relative to CARD center)
                     const x_card = Math.cos(currentAngle) * currentDistance;
@@ -650,10 +657,16 @@ Push The Envelope`.split('\n').map(item => item.trim());
                     const x = x_card + toCenterX;
                     const y = y_card + toCenterY;
                     
-                    // Smooth rotation and scale
-                    const currentRotation = totalFragmentSpin * t;
-                    const currentScale = 1 - t;  // Shrink to 0
-                    const currentOpacity = Math.max(0, 1 - t * 1.2);  // Fade out near the end
+                    // Smooth rotation and scale - use EASED t here too
+                    const currentRotation = totalFragmentSpin * t_eased;
+                    const currentScale = 1 - t_eased;  // Shrink to 0
+                    
+                    // Opacity - fade LATE, not early! Keep it visible longer!
+                    let currentOpacity = 1;
+                    if (t > vortex.opacityStart) {
+                        const fadeProgress = (t - opacityStart) / (1 - opacityStart);
+                        currentOpacity = 1 - fadeProgress;
+                    }
                     
                     keyframes.push({
                         transform: `translate(${x}px, ${y}px) rotate(${currentRotation}deg) scale(${currentScale})`,
@@ -703,7 +716,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
             
             return fragment;
         }
-
+        
         // ============================================================
         // CHAOTIC DESTRUCTION PARTICLE SYSTEM
         // ============================================================

@@ -182,6 +182,12 @@
             transform: rotateY(180deg);
         }
 
+        .bingo-tile.empty .tile-front,
+        .bingo-tile.empty .tile-back {
+            background: #7c8894;
+            border: 3px dashed #5b6a75;
+        }
+
         .bingo-tile.placeholder {
             pointer-events: none;
         }
@@ -905,7 +911,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
                         availableItems = fileItems;
                         source = 'items.txt';
                     } else {
-                        availableItems = [...DEFAULT_ITEMS];
+            availableItems = [...DEFAULT_ITEMS];
                     }
                 } else {
                     availableItems = [...DEFAULT_ITEMS];
@@ -1000,9 +1006,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
                         };
                     } else {
                         tile.classList.add('empty');
-                        tile.style.opacity = '0.3';
                         tile.style.cursor = 'default';
-                        front.style.border = '3px dashed #95a5a6';
                         tile.onclick = null;
                     }
                 }

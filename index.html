@@ -264,27 +264,35 @@
         }
 
         .tile-back::before {
-            content: '';
+            content: '✓';
             position: absolute;
             top: 4px;
             right: 4px;
             width: 20px;
             height: 20px;
-            background: rgba(255,255,255,0.3);
+            background: rgba(70, 70, 70, 0.25);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 13px;
         }
 
-        .tile-back::after {
-            content: '✓';
+        .line-number {
             position: absolute;
-            top: 3px;
-            right: 8px;
-            font-size: 16px;
-            color: white;
-            font-weight: bold;
+            bottom: 3px;
+            left: 3px;
+            min-width: 28px;
+            background: rgba(70, 70, 70, 0.25);
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px 6px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 12px;
+            font-weight: normal;
+            font-family: monospace;
         }
 
         @media (max-width: 600px) {
@@ -448,7 +456,10 @@ Boil The Ocean
 Move The Needle
 Drink The Kool-Aid
 Peel The Onion
-Push The Envelope`.split('\n').map(item => item.trim());
+Push The Envelope`.split('\n').map((item, index) => ({
+    text: item.trim(),
+    lineNumber: index + 1
+}));
 
         let currentItemCount = 25;
         let availableItems = [];
@@ -904,14 +915,17 @@ Push The Envelope`.split('\n').map(item => item.trim());
                 if (response.ok) {
                     const text = await response.text();
                     const fileItems = text.split('\n')
-                        .map(line => line.trim())
-                        .filter(line => line.length > 0);
+                        .map((line, index) => ({
+                            text: line.trim(),
+                            lineNumber: index + 1
+                        }))
+                        .filter(item => item.text.length > 0);
                     
                     if (fileItems.length > 0) {
                         availableItems = fileItems;
                         source = 'items.txt';
                     } else {
-            availableItems = [...DEFAULT_ITEMS];
+                        availableItems = [...DEFAULT_ITEMS];
                     }
                 } else {
                     availableItems = [...DEFAULT_ITEMS];
@@ -970,7 +984,7 @@ Push The Envelope`.split('\n').map(item => item.trim());
             
             const items = [...allItems];
             while (items.length < targetSize) {
-                items.push('');
+                items.push({ text: '', lineNumber: null });
             }
             
             const shuffled = shuffle(items);
@@ -989,18 +1003,25 @@ Push The Envelope`.split('\n').map(item => item.trim());
                     
                     const front = document.createElement('div');
                     front.className = 'tile-front';
-                    front.textContent = item;
+                    front.textContent = item.text;
                     
                     const back = document.createElement('div');
                     back.className = 'tile-back';
-                    back.textContent = item;
+                    back.textContent = item.text;
+                    
+                    if (item.lineNumber) {
+                        const lineNum = document.createElement('div');
+                        lineNum.className = 'line-number';
+                        lineNum.textContent = `#${item.lineNumber}`;
+                        back.appendChild(lineNum);
+                    }
                     
                     inner.appendChild(front);
                     inner.appendChild(back);
                     tile.innerHTML = '';
                     tile.appendChild(inner);
                     
-                    if (item) {
+                    if (item.text) {
                         tile.onclick = function() {
                             this.classList.toggle('marked');
                         };

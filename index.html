@@ -255,12 +255,15 @@
 
         .particle.chaos {
             animation: violentDestruction var(--particle-duration) var(--particle-easing) forwards;
+            will-change: transform, opacity;
+            backface-visibility: hidden;
         }
 
         .card-fragment {
             pointer-events: none;
             z-index: 1000;
-            will-change: transform;
+            will-change: transform, opacity;
+            backface-visibility: hidden;
         }
 
         .tile-back::before {
@@ -275,7 +278,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 13px;
+font-size: 13px;
         }
 
         .line-number {
@@ -503,7 +506,6 @@ Push The Envelope`.split('\n').map((item, index) => ({
                 return { x: 50, y: 50 };
             }
             
-            // Calculate centroid using the proper formula - no shortcuts!
             let area = 0;
             let cx = 0;
             let cy = 0;
@@ -529,7 +531,6 @@ Push The Envelope`.split('\n').map((item, index) => ({
         function createCardRip(tile) {
             const rect = tile.getBoundingClientRect();
             const sandbox = document.getElementById('particleSandbox');
-            const vortex = RIP_CONFIG.vortex;
             
             const isFlipped = tile.classList.contains('marked');
             const sourceElement = isFlipped ? 
@@ -540,15 +541,49 @@ Push The Envelope`.split('\n').map((item, index) => ({
             
             tile.style.opacity = '0';
             
-            const width = rect.width;
-            const height = rect.height;
+            // Get fragment geometry
+            const fragmentGeometry = generateFragmentGeometry();
+            
+            // Create fragments
+            const fragments = fragmentGeometry.map(({ points }) => {
+                const fragment = createFragment(sourceElement, rect, isFlipped);
+                fragment.style.clipPath = pointsToPolygon(points);
+                return fragment;
+            });
+            
+            const cardCenterX = rect.left + rect.width / 2;
+            const cardCenterY = rect.top + rect.height / 2;
+            
+            // Animate each fragment with vortex effect
+            fragmentGeometry.forEach(({ centroid }, index) => {
+                const fragment = fragments[index];
+                const { keyframes, duration } = animateVortex(
+                    fragment, rect, centroid, cardCenterX, cardCenterY
+                );
+                
+                sandbox.appendChild(fragment);
+                
+                requestAnimationFrame(() => {
+                    fragment.animate(keyframes, {
+                        duration: duration,
+                        easing: 'cubic-bezier(0.25, 0.1, 0.25, 1)',
+                        fill: 'forwards'
+                    });
+                });
+            });
+            
+            setTimeout(() => {
+                fragments.forEach(f => f.remove());
+            }, TIMINGS.maxRipDuration);
+        }
+
+        // ============================================================
+        // FRAGMENT GEOMETRY - Sacred geometry, capisce?
+        // ============================================================
+        function generateFragmentGeometry() {
             const jitter = RIP_CONFIG.jitter;
             
-            // Pick a random rotation - keep 'em on their toes!
-            const rotations = [0, 90, 180, 270];
-            const rotation = rotations[Math.floor(Math.random() * rotations.length)];
-            
-            // Define the 5 shared cut points with randomization - as NUMBERS, not strings!
+            // Generate the cut points with randomization
             const tlX = randomInRange(-jitter, jitter);
             const tlY = randomInRange(-jitter, jitter);
             const trX = 100 + randomInRange(-jitter, jitter);
@@ -558,6 +593,7 @@ Push The Envelope`.split('\n').map((item, index) => ({
             const bcX = 50 + randomInRange(-jitter, jitter);
             const bcY = 100;
             
+            // Three fragments - left, right, top
             const fragment1Points = [
                 { x: 0, y: 0 },
                 { x: tlX, y: tlY },
@@ -582,135 +618,94 @@ Push The Envelope`.split('\n').map((item, index) => ({
                 { x: 100, y: 0 }
             ];
             
-            // Create fragments and set their clip paths
-            const fragment1 = createFragment(sourceElement, rect, isFlipped);
-            fragment1.style.clipPath = pointsToPolygon(fragment1Points);
-            
-            const fragment2 = createFragment(sourceElement, rect, isFlipped);
-            fragment2.style.clipPath = pointsToPolygon(fragment2Points);
-            
-            const fragment3 = createFragment(sourceElement, rect, isFlipped);
-            fragment3.style.clipPath = pointsToPolygon(fragment3Points);
-            
-            const centroid1 = calculatePolygonCentroid(fragment1Points);
-            const centroid2 = calculatePolygonCentroid(fragment2Points);
-            const centroid3 = calculatePolygonCentroid(fragment3Points);
-            
-            const fragments = [fragment1, fragment2, fragment3];
-            
-            // Set up each fragment with its center of gravity and vortex parameters
-            const fragmentData = [
-                { fragment: fragment1, centroid: centroid1 },
-                { fragment: fragment2, centroid: centroid2 },
-                { fragment: fragment3, centroid: centroid3 }
+            return [
+                { points: fragment1Points, centroid: calculatePolygonCentroid(fragment1Points) },
+                { points: fragment2Points, centroid: calculatePolygonCentroid(fragment2Points) },
+                { points: fragment3Points, centroid: calculatePolygonCentroid(fragment3Points) }
             ];
-            
-            // Calculate the ACTUAL center of the card in screen coordinates
-            const cardCenterX = rect.left + rect.width / 2;
-            const cardCenterY = rect.top + rect.height / 2;
-            
+        }
+
+        // ============================================================
+        // VORTEX ANIMATOR - Destruction only, one direction, professional
+        // ============================================================
+        function animateVortex(fragment, rect, centroid, cardCenterX, cardCenterY) {
+            const vortex = RIP_CONFIG.vortex;
             const fragmentDuration = randomInRange(TIMINGS.minRipDuration, TIMINGS.maxRipDuration);
             const durationInSeconds = fragmentDuration / 1000;
-
+            
+            // Transform origin is THE CENTROID
+            fragment.style.transformOrigin = `${centroid.x}% ${centroid.y}%`;
+            
+            // Calculate where the fragment's centroid actually IS in screen coords
+            const fragmentCenterX = rect.left + (rect.width * centroid.x / 100);
+            const fragmentCenterY = rect.top + (rect.height * centroid.y / 100);
+            
+            // Vector from fragment to card center
+            const toCenterX = cardCenterX - fragmentCenterX;
+            const toCenterY = cardCenterY - fragmentCenterY;
+            const distance = Math.sqrt(toCenterX * toCenterX + toCenterY * toCenterY);
+            
+            // Starting angle - where the fragment IS relative to center
+            const startAngle = Math.atan2(-toCenterY, -toCenterX);
+            
+            // Calculate motion based on speed and duration
             const cardOrbitalSpeed = randomInRange(vortex.orbitalSpeedMin, vortex.orbitalSpeedMax);
-
-            // User-specified rotation is ADDED to the natural rotation
+            const orbitalSpeed = cardOrbitalSpeed + randomInRange(-vortex.fragmentOrbitVariation, vortex.fragmentOrbitVariation);
+            const totalRevolutions = orbitalSpeed * durationInSeconds;
+            const totalRotation = totalRevolutions * Math.PI * 2 * vortex.spiralDirection;
+            
+            // Don't go all the way to center - leave a gap
+            const finalDistance = distance * vortex.centerGapPercent;
+            
+            // Rotation relative to the spiral
+            const naturalRotationSpeed = orbitalSpeed * 360 * vortex.spiralDirection;
             const cardRelativeRotationSpeed = randomInRange(
                 vortex.relativeRotationSpeedMin,
                 vortex.relativeRotationSpeedMax
             );
+            const relativeRotationSpeed = cardRelativeRotationSpeed + randomInRange(-vortex.fragmentRotationVariation, vortex.fragmentRotationVariation);
+                
+            // Total rotation = natural (to maintain orientation) + relative (extra spin)
+            const actualRotationSpeed = naturalRotationSpeed + relativeRotationSpeed;
+            const totalFragmentSpin = actualRotationSpeed * durationInSeconds;
             
-            fragmentData.forEach(({ fragment, centroid }) => {
-                // Transform origin is THE CENTROID
-                fragment.style.transformOrigin = `${centroid.x}% ${centroid.y}%`;
+            // Generate keyframes along spiral path
+            const keyframes = [];
+            const numSteps = vortex.spiralKeyframes;
+            const easeIn = (t) => Math.pow(t, vortex.easePower);
+            
+            for (let i = 0; i <= numSteps; i++) {
+                const t = i / numSteps;  // 0 to 1, linear progression through time
+                const t_eased = easeIn(t);  // 0 to 1, but ACCELERATING
                 
-                // Calculate where the fragment's centroid actually IS in screen coords
-                const fragmentCenterX = rect.left + (rect.width * centroid.x / 100);
-                const fragmentCenterY = rect.top + (rect.height * centroid.y / 100);
+                const currentDistance = distance - (distance - finalDistance) * t_eased;
+                const currentAngle = startAngle + totalRotation * t_eased;
                 
-                // Vector from fragment to card center
-                const toCenterX = cardCenterX - fragmentCenterX;
-                const toCenterY = cardCenterY - fragmentCenterY;
-                const distance = Math.sqrt(toCenterX * toCenterX + toCenterY * toCenterY);
-                
-                // Starting angle - this is where the fragment IS relative to center
-                // CRITICAL: It's the OPPOSITE of the vector TO center!
-                const startAngle = Math.atan2(-toCenterY, -toCenterX);
-                
-                // Calculate actual motion based on SPEED and DURATION
-                // This is the KEY - now duration and speed are INDEPENDENT!
-                const orbitalSpeed = cardOrbitalSpeed + randomInRange(-vortex.fragmentOrbitVariation, vortex.fragmentOrbitVariation);
-                const totalRevolutions = orbitalSpeed * durationInSeconds;
-                const totalRotation = totalRevolutions * Math.PI * 2 * vortex.spiralDirection;
-                
-                // Don't go all the way to center - leave a gap
-                const finalDistance = distance * vortex.centerGapPercent;
-                
-                // rotation RELATIVE to the spiral!
-                // When you orbit, you're already rotating just to face the center
-                // The "natural" rotation speed is exactly the orbital speed
-                const naturalRotationSpeed = orbitalSpeed * 360 * vortex.spiralDirection; // deg/sec
-                
-                const relativeRotationSpeed = cardRelativeRotationSpeed + randomInRange(-vortex.fragmentRotationVariation, vortex.fragmentRotationVariation);
-                
-                // Total rotation = natural (to maintain orientation) + relative (extra spin)
-                const actualRotationSpeed = naturalRotationSpeed + relativeRotationSpeed;
-                const totalFragmentSpin = actualRotationSpeed * durationInSeconds;
-                
-                // Generate keyframes along a REAL spiral path!
-                const keyframes = [];
-                const numSteps = vortex.spiralKeyframes;
-                
-                const easeIn = (t) => Math.pow(t, vortex.easePower);
-                
-                for (let i = 0; i <= numSteps; i++) {
-                    const t = i / numSteps;  // 0 to 1, linear progression through time
-                    const t_eased = easeIn(t);  // 0 to 1, but ACCELERATING
+                // Convert polar to cartesian (relative to CARD center)
+                const x_card = Math.cos(currentAngle) * currentDistance;
+                const y_card = Math.sin(currentAngle) * currentDistance;
                     
-                    // Use EASED t for the inward motion - starts slow, ends FAST!
-                    const currentDistance = distance - (distance - finalDistance) * t_eased;
-                    const currentAngle = startAngle + totalRotation * t_eased;
-                    
-                    // Convert polar to cartesian (relative to CARD center)
-                    const x_card = Math.cos(currentAngle) * currentDistance;
-                    const y_card = Math.sin(currentAngle) * currentDistance;
-                    
-                    // Convert to fragment-centered coordinates - THIS IS THE KEY!
-                    const x = x_card + toCenterX;
-                    const y = y_card + toCenterY;
-                    
-                    // Smooth rotation and scale - use EASED t here too
-                    const currentRotation = totalFragmentSpin * t_eased;
-                    const currentScale = 1 - t_eased;  // Shrink to 0
-                    
-                    // Opacity - fade LATE, not early! Keep it visible longer!
-                    let currentOpacity = 1;
-                    if (t_eased > vortex.opacityStart) {
-                        const fadeProgress = (t_eased - vortex.opacityStart) / (1 - vortex.opacityStart);
-                        currentOpacity = 1 - fadeProgress;
-                    }
-                    
-                    keyframes.push({
-                        transform: `translate(${x}px, ${y}px) rotate(${currentRotation}deg) scale(${currentScale})`,
-                        opacity: currentOpacity
-                    });
+                // Convert to fragment-centered coordinates - THIS IS THE KEY!
+                const x = x_card + toCenterX;
+                const y = y_card + toCenterY;
+                
+                const currentRotation = totalFragmentSpin * t_eased;
+                const currentScale = 1 - t_eased;
+                
+                // Opacity fade
+                let currentOpacity = 1;
+                if (t_eased > vortex.opacityStart) {
+                    const fadeProgress = (t_eased - vortex.opacityStart) / (1 - vortex.opacityStart);
+                    currentOpacity = 1 - fadeProgress;
                 }
                 
-                sandbox.appendChild(fragment);
-                
-                // Use Web Animations API for smooth spiral - this is the REAL deal!
-                requestAnimationFrame(() => {
-                    fragment.animate(keyframes, {
-                        duration: fragmentDuration,  // Each fragment gets its OWN timing!
-                        easing: 'cubic-bezier(0.25, 0.1, 0.25, 1)',
-                        fill: 'forwards'
-                    });
+                keyframes.push({
+                    transform: `translate(${x}px, ${y}px) rotate(${currentRotation}deg) scale(${currentScale})`,
+                    opacity: currentOpacity
                 });
-            });
+            }
             
-            setTimeout(() => {
-                fragments.forEach(f => f.remove());
-            }, TIMINGS.maxRipDuration);
+            return { keyframes, duration: fragmentDuration };
         }
         
         function createFragment(sourceElement, rect, isFlipped) {

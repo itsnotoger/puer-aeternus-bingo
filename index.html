@@ -377,8 +377,8 @@
         const RIP_CONFIG = {
             jitter: 15,
             edgeRoughness: {
-                extraPointsPerEdge: 5,
-                maxDeviationPx: 2
+                extraPointsPerEdge: 2,
+                maxDeviationPx: 0.9
             },
             vortex: {
                 spiralDirection: 1,
@@ -393,7 +393,7 @@
                 // Spiral/orbital speed (revolutions per second around center)
                 orbitalSpeedMin: 0.7,
                 orbitalSpeedMax: 1.0,
-                fragmentOrbitVariation: 0.2,
+                fragmentOrbitVariation: 0.17,
                 
                 // Don't go ALL the way to center - leave a gap
                 centerGapPercent: 0.2,
@@ -405,7 +405,7 @@
                 // 2 = quadratic (gentle acceleration)
                 // 3 = cubic (strong acceleration)
                 // 1.5 = sweet spot between gentle and strong
-                easePower: 1.6,
+                easePower: 2.3,
                 
                 // Number of keyframes for smooth spiral
                 spiralKeyframes: 20,

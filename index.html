@@ -278,7 +278,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-font-size: 13px;
+            font-size: 13px;
         }
 
         .line-number {
@@ -377,11 +377,8 @@ font-size: 13px;
         const RIP_CONFIG = {
             jitter: 15,
             edgeRoughness: {
-                enabled: true,
-                // How many extra points to add along each edge for roughness
-                pointsPerEdge: 3,
-                // Maximum deviation from the straight line (in percentage)
-                maxDeviation: 4
+                extraPointsPerEdge: 5,
+                maxDeviationPx: 2
             },
             vortex: {
                 spiralDirection: 1,
@@ -554,7 +551,7 @@ Push The Envelope`.split('\n').map((item, index) => ({
 
         // Create torn paper effect by adding jagged points along edges
         function roughenEdges(points) {
-            if (!RIP_CONFIG.edgeRoughness.enabled) {
+            if (!RIP_CONFIG.edgeRoughness.extraPointsPerEdge < 1) {
                 return points;
             }
             
@@ -568,8 +565,8 @@ Push The Envelope`.split('\n').map((item, index) => ({
                 roughPoints.push(current);
                 
                 // Add intermediate points with random offsets for raggedness
-                for (let j = 1; j <= config.pointsPerEdge; j++) {
-                    const t = j / (config.pointsPerEdge + 1);
+                for (let j = 1; j <= config.extraPointsPerEdge; j++) {
+                    const t = j / (config.extraPointsPerEdge + 1);
                     
                     // Linear interpolation
                     const interpX = current.x + (next.x - current.x) * t;
@@ -586,11 +583,11 @@ Push The Envelope`.split('\n').map((item, index) => ({
                         const perpY = dx / len;
                         
                         // Random offset along perpendicular
-                        const offset = (Math.random() - 0.5) * config.maxDeviation;
+                        const offset = randomInRange(-config.maxDeviationPx, -config.maxDeviationPx);
                         
                         roughPoints.push({
-                            x: interpX + perpX * offset,
-                            y: interpY + perpY * offset
+                            x: interpX + perpX + offset,
+                            y: interpY + perpY + offset
                         });
                     }
                 }
@@ -634,9 +631,7 @@ Push The Envelope`.split('\n').map((item, index) => ({
             // Animate each fragment with vortex effect
             fragmentGeometry.forEach(({ centroid }, index) => {
                 const fragment = fragments[index];
-                const { keyframes, duration } = animateVortex(
-                    fragment, rect, centroid, cardCenterX, cardCenterY
-                );
+                const { keyframes, duration } = animateVortex(fragment, rect, centroid, cardCenterX, cardCenterY);
                 
                 sandbox.appendChild(fragment);
                 
@@ -744,10 +739,7 @@ Push The Envelope`.split('\n').map((item, index) => ({
             
             // Rotation relative to the spiral
             const naturalRotationSpeed = orbitalSpeed * 360 * vortex.spiralDirection;
-            const cardRelativeRotationSpeed = randomInRange(
-                vortex.relativeRotationSpeedMin,
-                vortex.relativeRotationSpeedMax
-            );
+            const cardRelativeRotationSpeed = randomInRange(vortex.relativeRotationSpeedMin, vortex.relativeRotationSpeedMax);
             const relativeRotationSpeed = cardRelativeRotationSpeed + randomInRange(-vortex.fragmentRotationVariation, vortex.fragmentRotationVariation);
                 
             // Total rotation = natural (to maintain orientation) + relative (extra spin)

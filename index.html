@@ -551,7 +551,7 @@ Push The Envelope`.split('\n').map((item, index) => ({
 
         // Create torn paper effect by adding jagged points along edges
         function roughenEdges(points) {
-            if (!RIP_CONFIG.edgeRoughness.extraPointsPerEdge < 1) {
+            if (RIP_CONFIG.edgeRoughness.extraPointsPerEdge < 1) {
                 return points;
             }
             

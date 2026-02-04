@@ -583,7 +583,7 @@ Push The Envelope`.split('\n').map((item, index) => ({
                         const perpY = dx / len;
                         
                         // Random offset along perpendicular
-                        const offset = randomInRange(-config.maxDeviationPx, -config.maxDeviationPx);
+                        const offset = randomInRange(-config.maxDeviationPx, config.maxDeviationPx);
                         
                         roughPoints.push({
                             x: interpX + perpX + offset,

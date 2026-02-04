@@ -500,6 +500,26 @@ Push The Envelope`.split('\n').map((item, index) => ({
             return `polygon(${points.map(p => `${p.x}% ${p.y}%`).join(', ')})`;
         }
 
+        function rotatePoint(point, angleDeg, centerX = 50, centerY = 50) {
+            const angleRad = (angleDeg * Math.PI) / 180;
+            const cos = Math.cos(angleRad);
+            const sin = Math.sin(angleRad);
+            
+            // Translate to origin
+            const x = point.x - centerX;
+            const y = point.y - centerY;
+            
+            // Rotate
+            const xRot = x * cos - y * sin;
+            const yRot = x * sin + y * cos;
+            
+            // Translate back
+            return {
+                x: xRot + centerX,
+                y: yRot + centerY
+            };
+        }
+
         function calculatePolygonCentroid(points) {
             if (points.length < 3) {
                 console.warn('using fallback centroid');
@@ -525,7 +545,7 @@ Push The Envelope`.split('\n').map((item, index) => ({
             return { x: cx, y: cy };
         }
 
-        // ============================================================
+                // ============================================================
         // CARD RIPPING EFFECT - Trifold tear from center
         // ============================================================
         function createCardRip(tile) {
@@ -583,40 +603,48 @@ Push The Envelope`.split('\n').map((item, index) => ({
         function generateFragmentGeometry() {
             const jitter = RIP_CONFIG.jitter;
             
+            const rotations = [0, 90, 180, 270];
+            const rotation = rotations[Math.floor(Math.random() * rotations.length)];
+            
             // Generate the cut points with randomization
             const tlX = randomInRange(-jitter, jitter);
             const tlY = randomInRange(-jitter, jitter);
             const trX = 100 + randomInRange(-jitter, jitter);
             const trY = randomInRange(-jitter, jitter);
-            const centerX = 50 + randomInRange(-jitter, jitter);
-            const centerY = 66.666 + randomInRange(-jitter, jitter);
+            const ripCenterX = 50 + randomInRange(-jitter, jitter);
+            const ripCenterY = 66.666 + randomInRange(-jitter, jitter);
             const bcX = 50 + randomInRange(-jitter, jitter);
             const bcY = 100;
             
-            // Three fragments - left, right, top
-            const fragment1Points = [
+            // Three fragments - left, right, top (BEFORE rotation)
+            const fragment1PointsBase = [
                 { x: 0, y: 0 },
                 { x: tlX, y: tlY },
-                { x: centerX, y: centerY },
+                { x: ripCenterX, y: ripCenterY },
                 { x: bcX, y: bcY },
                 { x: 0, y: 100 }
             ];
             
-            const fragment2Points = [
-                { x: centerX, y: centerY },
+            const fragment2PointsBase = [
+                { x: ripCenterX, y: ripCenterY },
                 { x: trX, y: trY },
                 { x: 100, y: 0 },
                 { x: 100, y: 100 },
                 { x: bcX, y: bcY }
             ];
             
-            const fragment3Points = [
+            const fragment3PointsBase = [
                 { x: 0, y: 0 },
                 { x: tlX, y: tlY },
-                { x: centerX, y: centerY },
+                { x: ripCenterX, y: ripCenterY },
                 { x: trX, y: trY },
                 { x: 100, y: 0 }
             ];
+            
+            // NOW rotate 'em all by the chosen angle!
+            const fragment1Points = fragment1PointsBase.map(p => rotatePoint(p, rotation));
+            const fragment2Points = fragment2PointsBase.map(p => rotatePoint(p, rotation));
+            const fragment3Points = fragment3PointsBase.map(p => rotatePoint(p, rotation));
             
             return [
                 { points: fragment1Points, centroid: calculatePolygonCentroid(fragment1Points) },

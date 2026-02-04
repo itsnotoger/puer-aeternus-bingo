@@ -376,6 +376,13 @@ font-size: 13px;
         
         const RIP_CONFIG = {
             jitter: 15,
+            edgeRoughness: {
+                enabled: true,
+                // How many extra points to add along each edge for roughness
+                pointsPerEdge: 3,
+                // Maximum deviation from the straight line (in percentage)
+                maxDeviation: 4
+            },
             vortex: {
                 spiralDirection: 1,
                 // Fragment rotation speed RELATIVE to orbital motion (degrees per second)
@@ -500,14 +507,14 @@ Push The Envelope`.split('\n').map((item, index) => ({
             return `polygon(${points.map(p => `${p.x}% ${p.y}%`).join(', ')})`;
         }
 
-        function rotatePoint(point, angleDeg, centerX = 50, centerY = 50) {
+        function rotatePoint(point, angleDeg, cardCenterX = 50, cardCenterY = 50) {
             const angleRad = (angleDeg * Math.PI) / 180;
             const cos = Math.cos(angleRad);
             const sin = Math.sin(angleRad);
             
-            // Translate to origin
-            const x = point.x - centerX;
-            const y = point.y - centerY;
+            // Translate to origin (relative to card's geometric center)
+            const x = point.x - cardCenterX;
+            const y = point.y - cardCenterY;
             
             // Rotate
             const xRot = x * cos - y * sin;
@@ -515,8 +522,8 @@ Push The Envelope`.split('\n').map((item, index) => ({
             
             // Translate back
             return {
-                x: xRot + centerX,
-                y: yRot + centerY
+                x: xRot + cardCenterX,
+                y: yRot + cardCenterY
             };
         }
 
@@ -545,7 +552,55 @@ Push The Envelope`.split('\n').map((item, index) => ({
             return { x: cx, y: cy };
         }
 
-                // ============================================================
+        // Create torn paper effect by adding jagged points along edges
+        function roughenEdges(points) {
+            if (!RIP_CONFIG.edgeRoughness.enabled) {
+                return points;
+            }
+            
+            const config = RIP_CONFIG.edgeRoughness;
+            const roughPoints = [];
+            
+            for (let i = 0; i < points.length; i++) {
+                const current = points[i];
+                const next = points[(i + 1) % points.length];
+                
+                roughPoints.push(current);
+                
+                // Add intermediate points with random offsets for raggedness
+                for (let j = 1; j <= config.pointsPerEdge; j++) {
+                    const t = j / (config.pointsPerEdge + 1);
+                    
+                    // Linear interpolation
+                    const interpX = current.x + (next.x - current.x) * t;
+                    const interpY = current.y + (next.y - current.y) * t;
+                    
+                    // Calculate perpendicular direction for offset
+                    const dx = next.x - current.x;
+                    const dy = next.y - current.y;
+                    const len = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (len > 0) {
+                        // Perpendicular vector (normalized)
+                        const perpX = -dy / len;
+                        const perpY = dx / len;
+                        
+                        // Random offset along perpendicular
+                        const offset = (Math.random() - 0.5) * config.maxDeviation;
+                        
+                        roughPoints.push({
+                            x: interpX + perpX * offset,
+                            y: interpY + perpY * offset
+                        });
+                    }
+                }
+            }
+            
+            return roughPoints;
+        }
+
+        
+        // ============================================================
         // CARD RIPPING EFFECT - Trifold tear from center
         // ============================================================
         function createCardRip(tile) {
@@ -567,7 +622,9 @@ Push The Envelope`.split('\n').map((item, index) => ({
             // Create fragments
             const fragments = fragmentGeometry.map(({ points }) => {
                 const fragment = createFragment(sourceElement, rect, isFlipped);
-                fragment.style.clipPath = pointsToPolygon(points);
+                // Apply torn edge roughness for realistic paper tear effect
+                const roughPoints = roughenEdges(points);
+                fragment.style.clipPath = pointsToPolygon(roughPoints);
                 return fragment;
             });
             
@@ -641,7 +698,7 @@ Push The Envelope`.split('\n').map((item, index) => ({
                 { x: 100, y: 0 }
             ];
             
-            // NOW rotate 'em all by the chosen angle!
+            // NOW rotate 'em all by the chosen angle around the CARD CENTER (50, 50)
             const fragment1Points = fragment1PointsBase.map(p => rotatePoint(p, rotation));
             const fragment2Points = fragment2PointsBase.map(p => rotatePoint(p, rotation));
             const fragment3Points = fragment3PointsBase.map(p => rotatePoint(p, rotation));
@@ -758,7 +815,7 @@ Push The Envelope`.split('\n').map((item, index) => ({
             fragment.style.textAlign = 'center';
             fragment.style.padding = computedStyle.padding;
             fragment.textContent = sourceElement.textContent;
-            
+                        
             return fragment;
         }
 

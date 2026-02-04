@@ -549,13 +549,16 @@ Push The Envelope`.split('\n').map((item, index) => ({
             return { x: cx, y: cy };
         }
 
-        // Create torn paper effect by adding jagged points along edges
+        /**
+         * Create torn paper effect by adding jagged points along edges.
+         */
         function roughenEdges(points) {
-            if (RIP_CONFIG.edgeRoughness.extraPointsPerEdge < 1) {
+            const config = RIP_CONFIG.edgeRoughness;
+
+            if (config.extraPointsPerEdge < 1) {
                 return points;
             }
-            
-            const config = RIP_CONFIG.edgeRoughness;
+    
             const roughPoints = [];
             
             for (let i = 0; i < points.length; i++) {
@@ -564,30 +567,27 @@ Push The Envelope`.split('\n').map((item, index) => ({
                 
                 roughPoints.push(current);
                 
-                // Add intermediate points with random offsets for raggedness
                 for (let j = 1; j <= config.extraPointsPerEdge; j++) {
                     const t = j / (config.extraPointsPerEdge + 1);
                     
-                    // Linear interpolation
+                    // Linear interpolation for the base point
                     const interpX = current.x + (next.x - current.x) * t;
                     const interpY = current.y + (next.y - current.y) * t;
                     
-                    // Calculate perpendicular direction for offset
                     const dx = next.x - current.x;
                     const dy = next.y - current.y;
                     const len = Math.sqrt(dx * dx + dy * dy);
                     
                     if (len > 0) {
-                        // Perpendicular vector (normalized)
+                        // Unit perpendicular vector (length = 1 pixel)
                         const perpX = -dy / len;
                         const perpY = dx / len;
                         
-                        // Random offset along perpendicular
                         const offset = randomInRange(-config.maxDeviationPx, config.maxDeviationPx);
                         
                         roughPoints.push({
-                            x: interpX + perpX + offset,
-                            y: interpY + perpY + offset
+                            x: interpX + (perpX * offset),
+                            y: interpY + (perpY * offset)
                         });
                     }
                 }
@@ -595,7 +595,6 @@ Push The Envelope`.split('\n').map((item, index) => ({
             
             return roughPoints;
         }
-
         
         // ============================================================
         // CARD RIPPING EFFECT - Trifold tear from center

@@ -193,21 +193,31 @@
             justify-content: center;
             font-size: var(--icon-size);
             opacity: 1;
-            filter: none;
+            filter: drop-shadow(0 0 var(--icon-shadow-size) rgba(0, 0, 0, var(--icon-shadow-opacity)));
             pointer-events: none;
             user-select: none;
             z-index: 0;
+        }
+        
+        .tile-emoji::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
             border-bottom: 2px solid rgba(255, 255, 255, 0.3);
             background: rgba(0, 0, 0, 0.1);
             border-radius: 7px 7px 0 0;
+            z-index: -1;
         }
 
         .tile-text {
             position: absolute;
-            top: calc(var(--icon-window-height) + var(--text-top-offset));
+            top: calc(50% + var(--text-top-offset));
             left: 0;
             right: 0;
-            bottom: 0;
+            transform: translateY(-50%);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -215,20 +225,13 @@
             font-family: var(--text-font);
             z-index: 1;
         }
-
-        .tile-back .tile-text {
-            text-shadow: 
-                0 0 var(--text-shadow-blur-1) rgba(0, 0, 0, var(--text-shadow-opacity-1)),
-                0 0 var(--text-shadow-blur-2) rgba(0, 0, 0, var(--text-shadow-opacity-2)),
-                0 0 var(--text-shadow-blur-3) rgba(0, 0, 0, var(--text-shadow-opacity-3));
-        }
         
         .tile-front .tile-text {
             position: relative;
             top: auto;
             left: auto;
             right: auto;
-            bottom: auto;
+            transform: none;
             font-family: var(--text-font);
         }
 
@@ -427,20 +430,14 @@
         const CARD_STYLE = {
             // Icon/emoji settings
             iconSize: 50,              // Font size in px
-            iconTopOffset: 0,          // % from top of card (0 = at top)
+            iconTopOffset: 0,          // % from top of icon window (not card)
             iconWindowHeight: 28,      // % of card height for icon area
+            iconShadowSize: 40,        // Drop shadow blur in px (creates darkness behind text)
+            iconShadowOpacity: 0.7,    // Drop shadow opacity (0-1)
             
             // Text settings
-            textTopOffset: 0,          // % offset from default position (0 = centered in remaining space)
-            textFont: 'Arial, sans-serif',
-            
-            // Text shadow (for back of card only)
-            textShadowBlur1: 20,       // First layer blur radius
-            textShadowBlur2: 30,       // Second layer blur radius
-            textShadowBlur3: 40,       // Third layer blur radius
-            textShadowOpacity1: 0.9,   // First layer opacity
-            textShadowOpacity2: 0.8,   // Second layer opacity
-            textShadowOpacity3: 0.7    // Third layer opacity
+            textTopOffset: 0,          // % offset from card center (0 = centered in whole card)
+            textFont: 'Arial, sans-serif'
         };
         
         const RIP_CONFIG = {
@@ -493,14 +490,10 @@
             root.style.setProperty('--icon-size', `${CARD_STYLE.iconSize}px`);
             root.style.setProperty('--icon-top-offset', `${CARD_STYLE.iconTopOffset}%`);
             root.style.setProperty('--icon-window-height', `${CARD_STYLE.iconWindowHeight}%`);
+            root.style.setProperty('--icon-shadow-size', `${CARD_STYLE.iconShadowSize}px`);
+            root.style.setProperty('--icon-shadow-opacity', CARD_STYLE.iconShadowOpacity);
             root.style.setProperty('--text-top-offset', `${CARD_STYLE.textTopOffset}%`);
             root.style.setProperty('--text-font', CARD_STYLE.textFont);
-            root.style.setProperty('--text-shadow-blur-1', `${CARD_STYLE.textShadowBlur1}px`);
-            root.style.setProperty('--text-shadow-blur-2', `${CARD_STYLE.textShadowBlur2}px`);
-            root.style.setProperty('--text-shadow-blur-3', `${CARD_STYLE.textShadowBlur3}px`);
-            root.style.setProperty('--text-shadow-opacity-1', CARD_STYLE.textShadowOpacity1);
-            root.style.setProperty('--text-shadow-opacity-2', CARD_STYLE.textShadowOpacity2);
-            root.style.setProperty('--text-shadow-opacity-3', CARD_STYLE.textShadowOpacity3);
         }
 
         window.TIMINGS = TIMINGS;
@@ -886,8 +879,12 @@
             fragment.style.textAlign = 'center';
             fragment.style.padding = computedStyle.padding;
             
-            // Clone the emoji and text structure
-            fragment.innerHTML = sourceElement.innerHTML;
+            // Cards are ALWAYS flipped to blank side before ripping,
+            // so we only need the text, no emoji or shadows
+            const textEl = sourceElement.querySelector('.tile-text');
+            if (textEl) {
+                fragment.textContent = textEl.textContent;
+            }
                         
             return fragment;
         }

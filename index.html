@@ -182,6 +182,56 @@
             transform: rotateY(180deg);
         }
 
+        .tile-emoji {
+            position: absolute;
+            top: var(--icon-top-offset);
+            left: 0;
+            right: 0;
+            height: var(--icon-window-height);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--icon-size);
+            opacity: 1;
+            filter: none;
+            pointer-events: none;
+            user-select: none;
+            z-index: 0;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 7px 7px 0 0;
+        }
+
+        .tile-text {
+            position: absolute;
+            top: calc(var(--icon-window-height) + var(--text-top-offset));
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            font-family: var(--text-font);
+            z-index: 1;
+        }
+
+        .tile-back .tile-text {
+            text-shadow: 
+                0 0 var(--text-shadow-blur-1) rgba(0, 0, 0, var(--text-shadow-opacity-1)),
+                0 0 var(--text-shadow-blur-2) rgba(0, 0, 0, var(--text-shadow-opacity-2)),
+                0 0 var(--text-shadow-blur-3) rgba(0, 0, 0, var(--text-shadow-opacity-3));
+        }
+        
+        .tile-front .tile-text {
+            position: relative;
+            top: auto;
+            left: auto;
+            right: auto;
+            bottom: auto;
+            font-family: var(--text-font);
+        }
+
         .bingo-tile.empty .tile-front,
         .bingo-tile.empty .tile-back {
             background: #7c8894;
@@ -374,6 +424,25 @@
             }
         };
         
+        const CARD_STYLE = {
+            // Icon/emoji settings
+            iconSize: 50,              // Font size in px
+            iconTopOffset: 0,          // % from top of card (0 = at top)
+            iconWindowHeight: 28,      // % of card height for icon area
+            
+            // Text settings
+            textTopOffset: 0,          // % offset from default position (0 = centered in remaining space)
+            textFont: 'Arial, sans-serif',
+            
+            // Text shadow (for back of card only)
+            textShadowBlur1: 20,       // First layer blur radius
+            textShadowBlur2: 30,       // Second layer blur radius
+            textShadowBlur3: 40,       // Third layer blur radius
+            textShadowOpacity1: 0.9,   // First layer opacity
+            textShadowOpacity2: 0.8,   // Second layer opacity
+            textShadowOpacity3: 0.7    // Third layer opacity
+        };
+        
         const RIP_CONFIG = {
             jitter: 15,
             edgeRoughness: {
@@ -414,59 +483,70 @@
 
         function initCSSVariables() {
             const root = document.documentElement;
+            
+            // Timing variables
             root.style.setProperty('--flip-duration', `${TIMINGS.flipDuration}ms`);
             root.style.setProperty('--rip-duration', `${TIMINGS.maxRipDuration}ms`);
             root.style.setProperty('--spiral-in-duration', `${TIMINGS.spiralInDuration}ms`);
+            
+            // Card style variables
+            root.style.setProperty('--icon-size', `${CARD_STYLE.iconSize}px`);
+            root.style.setProperty('--icon-top-offset', `${CARD_STYLE.iconTopOffset}%`);
+            root.style.setProperty('--icon-window-height', `${CARD_STYLE.iconWindowHeight}%`);
+            root.style.setProperty('--text-top-offset', `${CARD_STYLE.textTopOffset}%`);
+            root.style.setProperty('--text-font', CARD_STYLE.textFont);
+            root.style.setProperty('--text-shadow-blur-1', `${CARD_STYLE.textShadowBlur1}px`);
+            root.style.setProperty('--text-shadow-blur-2', `${CARD_STYLE.textShadowBlur2}px`);
+            root.style.setProperty('--text-shadow-blur-3', `${CARD_STYLE.textShadowBlur3}px`);
+            root.style.setProperty('--text-shadow-opacity-1', CARD_STYLE.textShadowOpacity1);
+            root.style.setProperty('--text-shadow-opacity-2', CARD_STYLE.textShadowOpacity2);
+            root.style.setProperty('--text-shadow-opacity-3', CARD_STYLE.textShadowOpacity3);
         }
 
         window.TIMINGS = TIMINGS;
         window.PARTICLE_CONFIG = PARTICLE_CONFIG;
+        window.CARD_STYLE = CARD_STYLE;
         window.refreshCSSTimings = initCSSVariables;
         initCSSVariables();
 
-        const DEFAULT_ITEMS = `Free Space
-Coffee Break
-Meeting Runs Late
-Technical Difficulties
-Someone's On Mute
-Can You See My Screen?
-Sorry, Go Ahead
-Email Could've Been
-Let's Circle Back
-Moving Forward
-Synergy
-Low Hanging Fruit
-Think Outside Box
-Touch Base
-On My Radar
-Bandwidth
-Deep Dive
-Loop You In
-Take This Offline
-Action Items
-Best Practices
-Leverage
-Paradigm Shift
-Win-Win
-Game Changer
-At The End Of Day
-Reach Out
-Ping Me
-Circle Back Around
-Let's Take This Async
-Parking Lot
-Quick Sync
-Align On This
-Get Ducks In Row
-Run It Up Flagpole
-Boil The Ocean
-Move The Needle
-Drink The Kool-Aid
-Peel The Onion
-Push The Envelope`.split('\n').map((item, index) => ({
-    text: item.trim(),
-    lineNumber: index + 1
-}));
+        const DEFAULT_ITEMS = `[
+["Untapped potential", "💎"],
+["Just keeping it casual (forever)", "🎭"],
+["Not ready for serious yet", "🚫"],
+["I need my freedom", "🦅"],
+["Planning feels like progress", "📋"],
+["Rejects interaction with NPC", "🎮"],
+["Quit when it gets hard", "🏃"],
+["If it's not perfect, why bother", "👑"],
+["Chronic restlessness", "🌊"],
+["Guilt because low productivity", "⚖️"],
+["I should be doing more", "📈"],
+["Starting new hobby", "🎨"],
+["Need to learn X before starting Y", "📚"],
+["Escape into fantasy", "🌙"],
+["Daydreaming precludes action", "☁️"],
+["Finding the dealbreaker (always)", "🔍"],
+["Spiritual growth over worldly success", "🧘"],
+["9-5 is a prison", "⛓️"],
+["My situation is uniquely complex", "❄️"],
+["Normal advice doesn't apply to me", "🎪"],
+["No one really gets me", "🎭"],
+["Keeping my options open", "🚪"],
+["External validation dependency", "👏"],
+["This is beneath me", "🗑️"],
+["Everyone's ahead of me", "🏁"],
+["I'm falling behind", "⏰"],
+["People will be looking at me critically", "👁️"],
+["Rather fail spectacularly than succeed ordinarily", "💥"],
+["My real life hasn't started yet", "⏸️"],
+["I could do that if I wanted to", "💭"],
+["What if something better comes along?", "🎰"],
+["I need to make a move soon", "♟️"],
+["Overthinking social encounter (with ChatGPT)", "🤖"],
+["Real life is like a video game (clear right/wrong)", "🎮"],
+["Recap without mentioning feelings", "📊"],
+["Problem solving by looking at facts", "🔬"]
+]`;
 
         let currentItemCount = 25;
         let availableItems = [];
@@ -805,7 +885,9 @@ Push The Envelope`.split('\n').map((item, index) => ({
             fragment.style.justifyContent = 'center';
             fragment.style.textAlign = 'center';
             fragment.style.padding = computedStyle.padding;
-            fragment.textContent = sourceElement.textContent;
+            
+            // Clone the emoji and text structure
+            fragment.innerHTML = sourceElement.innerHTML;
                         
             return fragment;
         }
@@ -981,28 +1063,31 @@ Push The Envelope`.split('\n').map((item, index) => ({
             }
             
             let source = 'default items';
+            let jsonData = DEFAULT_ITEMS;
+            
             try {
-                const response = await fetch('items.txt');
+                const response = await fetch('items.json');
                 if (response.ok) {
                     const text = await response.text();
-                    const fileItems = text.split('\n')
-                        .map((line, index) => ({
-                            text: line.trim(),
-                            lineNumber: index + 1
-                        }))
-                        .filter(item => item.text.length > 0);
-                    
-                    if (fileItems.length > 0) {
-                        availableItems = fileItems;
-                        source = 'items.txt';
-                    } else {
-                        availableItems = [...DEFAULT_ITEMS];
+                    if (text.trim().length > 0) {
+                        jsonData = text;
+                        source = 'items.json';
                     }
-                } else {
-                    availableItems = [...DEFAULT_ITEMS];
                 }
             } catch (error) {
-                availableItems = [...DEFAULT_ITEMS];
+                // Use default
+            }
+            
+            try {
+                const parsed = JSON.parse(jsonData);
+                availableItems = parsed.map((item, index) => ({
+                    text: item[0],
+                    emoji: item[1],
+                    lineNumber: index + 1
+                }));
+            } catch (error) {
+                console.error('Failed to parse items JSON:', error);
+                availableItems = [];
             }
             
             itemsLoadedOnce = true;
@@ -1055,7 +1140,7 @@ Push The Envelope`.split('\n').map((item, index) => ({
             
             const items = [...allItems];
             while (items.length < targetSize) {
-                items.push({ text: '', lineNumber: null });
+                items.push({ text: '', emoji: '', lineNumber: null });
             }
             
             const shuffled = shuffle(items);
@@ -1074,11 +1159,26 @@ Push The Envelope`.split('\n').map((item, index) => ({
                     
                     const front = document.createElement('div');
                     front.className = 'tile-front';
-                    front.textContent = item.text;
+                    
+                    const frontText = document.createElement('div');
+                    frontText.className = 'tile-text';
+                    frontText.textContent = item.text;
+                    front.appendChild(frontText);
                     
                     const back = document.createElement('div');
                     back.className = 'tile-back';
-                    back.textContent = item.text;
+                    
+                    if (item.emoji) {
+                        const emojiEl = document.createElement('div');
+                        emojiEl.className = 'tile-emoji';
+                        emojiEl.textContent = item.emoji;
+                        back.appendChild(emojiEl);
+                    }
+                    
+                    const backText = document.createElement('div');
+                    backText.className = 'tile-text';
+                    backText.textContent = item.text;
+                    back.appendChild(backText);
                     
                     if (item.lineNumber) {
                         const lineNum = document.createElement('div');

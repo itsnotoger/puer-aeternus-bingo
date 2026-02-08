@@ -207,10 +207,10 @@
             justify-content: center;
             font-size: var(--icon-size);
             opacity: 1;
-            filter: 
-                drop-shadow(0 var(--shadow-offset-y) var(--shadow-blur-1) rgba(0, 0, 0, var(--shadow-opacity)))
-                drop-shadow(0 var(--shadow-offset-y) var(--shadow-blur-2) rgba(0, 0, 0, var(--shadow-opacity)))
-                drop-shadow(0 var(--shadow-offset-y) var(--shadow-blur-3) rgba(0, 0, 0, var(--shadow-opacity)));
+            text-shadow: 
+                0 var(--shadow-offset-y) var(--shadow-blur-1) rgba(0, 0, 0, var(--shadow-opacity)),
+                0 var(--shadow-offset-y) var(--shadow-blur-2) rgba(0, 0, 0, var(--shadow-opacity)),
+                0 var(--shadow-offset-y) var(--shadow-blur-3) rgba(0, 0, 0, var(--shadow-opacity));
             pointer-events: none;
             user-select: none;
             z-index: 1;

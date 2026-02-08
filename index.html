@@ -230,6 +230,10 @@
             z-index: 2;
         }
         
+        .tile-back .tile-text {
+            text-shadow: 0 0 var(--text-shadow-blur) rgba(0, 0, 0, var(--text-shadow-opacity));
+        }
+        
         .tile-front .tile-text {
             position: absolute;
             top: calc(50% + var(--text-top-offset));
@@ -437,12 +441,12 @@
         
         const CARD_STYLE = {
             // Icon/emoji settings
-            iconSize: 50,              // Font size in px
-            iconTopOffset: 0,          // % from top of icon window (not card)
-            iconWindowHeight: 28,      // % of card height for icon area
+            iconSize: 46,              // Font size in px
+            iconTopOffset: -1,          // % from top of icon window (not card)
+            iconWindowHeight: 30,      // % of card height for icon area
             
             // Shadow settings (emoji casts shadow downward onto text)
-            shadowOffsetY: 20,         // px - how far down the shadow drops
+            shadowOffsetY: 38,         // px - how far down ALL shadows drop (same position)
             shadowBlur1: 15,           // First shadow layer blur
             shadowBlur2: 25,           // Second shadow layer blur  
             shadowBlur3: 35,           // Third shadow layer blur
@@ -450,7 +454,9 @@
             
             // Text settings
             textTopOffset: 0,          // % offset from card center (0 = centered in whole card)
-            textFont: 'Arial, sans-serif'
+            textFont: 'Arial, sans-serif',
+            textShadowBlur: 8,         // Subtle shadow on text to blend into main shadow
+            textShadowOpacity: 0.3     // Very subtle (0-1)
         };
         
         const RIP_CONFIG = {
@@ -510,6 +516,8 @@
             root.style.setProperty('--shadow-opacity', CARD_STYLE.shadowOpacity);
             root.style.setProperty('--text-top-offset', `${CARD_STYLE.textTopOffset}%`);
             root.style.setProperty('--text-font', CARD_STYLE.textFont);
+            root.style.setProperty('--text-shadow-blur', `${CARD_STYLE.textShadowBlur}px`);
+            root.style.setProperty('--text-shadow-opacity', CARD_STYLE.textShadowOpacity);
         }
 
         window.TIMINGS = TIMINGS;

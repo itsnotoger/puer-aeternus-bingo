@@ -440,17 +440,16 @@
         };
         
         const CARD_STYLE = {
-            // Icon/emoji settings
-            iconSize: 46,              // Font size in px
-            iconTopOffset: -1,          // % from top of icon window (not card)
+            iconSize: 44,              // Font size in px
+            iconTopOffset: 0.5,          // % from top of icon window (not card)
             iconWindowHeight: 30,      // % of card height for icon area
             
             // Shadow settings (emoji casts shadow downward onto text)
-            shadowOffsetY: 40,         // px - how far down ALL shadows drop (same position)
+            shadowOffsetY: 47,         // px - how far down shadows drop
             shadowBlur1: 15,           // First shadow layer blur
             shadowBlur2: 25,           // Second shadow layer blur  
-            shadowBlur3: 35,           // Third shadow layer blur
-            shadowOpacity: 0.8,        // Overall shadow darkness (0-1)
+            shadowBlur3: 40,           // Third shadow layer blur
+            shadowOpacity: 0.25,        // Overall shadow darkness (0-1)
             
             // Text settings
             textTopOffset: 0,          // % offset from card center (0 = centered in whole card)

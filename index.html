@@ -601,23 +601,35 @@
             top: var(--icon-top-offset);
             left: 0;
             right: 0;
-            /* height is intentionally NOT tied to --icon-window-height;
-               the emoji is positioned independently via --icon-top-offset (px).
-               The ::after band is a separate visual element. */
             height: auto;
             display: var(--icon-display);
             align-items: center;
             justify-content: center;
             line-height: 1;
             font-size: var(--icon-size);
-            opacity: 1;
-            text-shadow:
-                0 var(--shadow-offset-y) var(--shadow-blur-1) rgba(0, 0, 0, var(--shadow-opacity)),
-                0 var(--shadow-offset-y) var(--shadow-blur-2) rgba(0, 0, 0, var(--shadow-opacity)),
-                0 var(--shadow-offset-y) var(--shadow-blur-3) rgba(0, 0, 0, var(--shadow-opacity));
             pointer-events: none;
             user-select: none;
-            z-index: 1;
+            z-index: 2; /* sits above the shadow ghost */
+        }
+
+        /* Ghost emoji — same anchor, scaled up via --shadow-scale, shadow-only SVG filter.
+           The real .tile-emoji covers the ghost body; only the shadow bleeds out.
+           No filter on the real emoji = no shadow-on-shadow artifacts. */
+        .tile-emoji-shadow {
+            position: absolute;
+            top: var(--icon-top-offset);
+            left: 0;
+            right: 0;
+            height: auto;
+            display: var(--icon-display);
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            font-size: calc(var(--icon-size) * var(--shadow-scale));
+            filter: var(--emoji-shadow-filter);
+            pointer-events: none;
+            user-select: none;
+            z-index: 1; /* behind the real emoji */
         }
 
         .tile-text {
@@ -913,11 +925,12 @@
             iconSize: 44,
             iconTopOffset: 4,   // px from top of card, supports negatives
             iconWindowHeight: 30,
-            shadowOffsetY: 47,
-            shadowBlur1: 15,
-            shadowBlur2: 25,
-            shadowBlur3: 40,
-            shadowOpacity: 0.25,
+            shadowOffsetX: 0,
+            shadowOffsetY: 38,
+            shadowScale: 1.25,
+            shadowSpread: 0,
+            shadowBlur: 6,
+            shadowOpacity: 0.5,
             textTopOffset: 0,
             textFont: 'Arial, sans-serif',
             textShadowBlur: 15,
@@ -968,18 +981,23 @@
                 onChange: () => initCSSVariables(),
                 note: null,
                 fields: [
+                    // --- Icon layout ---
                     { path: 'iconSize',          label: 'Icon Size',           type: 'int',        hint: 'px'            },
-                    { path: 'iconTopOffset',     label: 'Icon Top Offset',     type: 'int',        hint: 'px'            },
                     { path: 'iconWindowHeight',  label: 'Icon Window Height',  type: 'percent100', min: 0,   max: 100    },
-                    { path: 'shadowOffsetY',     label: 'Shadow Offset Y',     type: 'int',        hint: 'px'            },
-                    { path: 'shadowBlur1',       label: 'Shadow Blur 1',       type: 'int',        hint: 'px'            },
-                    { path: 'shadowBlur2',       label: 'Shadow Blur 2',       type: 'int',        hint: 'px'            },
-                    { path: 'shadowBlur3',       label: 'Shadow Blur 3',       type: 'int',        hint: 'px'            },
-                    { path: 'shadowOpacity',     label: 'Shadow Opacity',      type: 'percent',    min: 0,   max: 1      },
+                    // --- Text layout ---
                     { path: 'textTopOffset',     label: 'Text Top Offset',     type: 'percent100', min: -50, max: 50     },
+                    { path: 'iconTopOffset',     label: 'Icon Top Offset',     type: 'int',        hint: 'px'            },
+                    // --- Text style ---
                     { path: 'textFont',          label: 'Text Font',           type: 'string'                            },
                     { path: 'textShadowBlur',    label: 'Text Shadow Blur',    type: 'int',        hint: 'px'            },
                     { path: 'textShadowOpacity', label: 'Text Shadow Opacity', type: 'percent',    min: 0,   max: 1      },
+                    // --- Icon shadow (SVG filter on scaled ghost emoji) ---
+                    { path: 'shadowOffsetX',  label: 'Shadow Offset X',  type: 'int',     hint: 'px' },
+                    { path: 'shadowOffsetY',  label: 'Shadow Offset Y',  type: 'int',     hint: 'px' },
+                    { path: 'shadowScale',    label: 'Shadow Scale',     type: 'float'               },
+                    { path: 'shadowSpread',   label: 'Shadow Spread',    type: 'int',     hint: 'px' },
+                    { path: 'shadowBlur',     label: 'Shadow Blur',      type: 'int',     hint: 'px' },
+                    { path: 'shadowOpacity',  label: 'Shadow Opacity',   type: 'percent', min: 0, max: 1 },
                 ]
             },
             {
@@ -1033,6 +1051,55 @@
         // ============================================================
         // CSS VARIABLES
         // ============================================================
+        function buildEmojiShadowFilter() {
+            const old = document.getElementById('emojiShadowFilterDefs');
+            if (old) old.remove();
+
+            const icons = CARD_STYLE.showIcons;
+            if (!icons) return;
+
+            const ox     = CARD_STYLE.shadowOffsetX;
+            const oy     = CARD_STYLE.shadowOffsetY;
+            const spread = Math.max(0, CARD_STYLE.shadowSpread);
+            const blur   = Math.max(0, CARD_STYLE.shadowBlur);
+            const op     = CARD_STYLE.shadowOpacity;
+
+            // Shadow-only filter: we scale the ghost emoji up (via --shadow-scale on
+            // .tile-emoji-shadow), cast the shadow from that larger footprint, then the
+            // filter outputs ONLY the shadow — no SourceGraphic in the feMerge.
+            // The real .tile-emoji sits on top with no filter at all.
+            // This gives a big soft shadow without morphology or layer-on-layer artifacts.
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.id = 'emojiShadowFilterDefs';
+            svg.setAttribute('width', '0');
+            svg.setAttribute('height', '0');
+            svg.style.cssText = 'position:absolute;overflow:hidden;pointer-events:none;';
+
+            const spreadNode = spread > 0
+                ? `<feMorphology in="SourceAlpha" operator="dilate"
+                                  radius="${spread}" result="dilated"/>`
+                : '';
+            const blurIn = spread > 0 ? 'dilated' : 'SourceAlpha';
+
+            svg.innerHTML = `
+                <defs>
+                    <filter id="emojiShadow"
+                            x="-150%" y="-150%" width="400%" height="400%"
+                            color-interpolation-filters="sRGB">
+                        ${spreadNode}
+                        <feGaussianBlur in="${blurIn}" stdDeviation="${blur}"
+                                        result="blurred"/>
+                        <feOffset in="blurred" dx="${ox}" dy="${oy}"
+                                  result="shifted"/>
+                        <feFlood flood-color="black" flood-opacity="${op}"
+                                 result="color"/>
+                        <feComposite in="color" in2="shifted" operator="in"/>
+                    </filter>
+                </defs>`;
+
+            document.body.insertBefore(svg, document.body.firstChild);
+        }
+
         function initCSSVariables() {
             const root = document.documentElement;
             const icons = CARD_STYLE.showIcons;
@@ -1042,22 +1109,22 @@
             root.style.setProperty('--spiral-in-duration',  `${TIMINGS.spiralInDuration}ms`);
 
             root.style.setProperty('--icon-size',          `${CARD_STYLE.iconSize}px`);
-            root.style.setProperty('--icon-top-offset',    `${CARD_STYLE.iconTopOffset}px`);  // px, not %
+            root.style.setProperty('--icon-top-offset',    `${CARD_STYLE.iconTopOffset}px`);
             root.style.setProperty('--icon-window-height', icons ? `${CARD_STYLE.iconWindowHeight}%` : '0%');
+            root.style.setProperty('--shadow-scale',       CARD_STYLE.shadowScale);
 
-            root.style.setProperty('--shadow-offset-y', icons ? `${CARD_STYLE.shadowOffsetY}px` : '0px');
-            root.style.setProperty('--shadow-blur-1',   icons ? `${CARD_STYLE.shadowBlur1}px`   : '0px');
-            root.style.setProperty('--shadow-blur-2',   icons ? `${CARD_STYLE.shadowBlur2}px`   : '0px');
-            root.style.setProperty('--shadow-blur-3',   icons ? `${CARD_STYLE.shadowBlur3}px`   : '0px');
-            root.style.setProperty('--shadow-opacity',  icons ? CARD_STYLE.shadowOpacity         : '0');
+            buildEmojiShadowFilter();
+            // Shadow emoji gets the filter; real emoji sits clean on top
+            root.style.setProperty('--emoji-shadow-filter', icons ? 'url(#emojiShadow)' : 'none');
 
-            root.style.setProperty('--text-top-offset',      `${CARD_STYLE.textTopOffset}%`);
-            root.style.setProperty('--text-font',            CARD_STYLE.textFont);
-            root.style.setProperty('--text-shadow-blur',     icons ? `${CARD_STYLE.textShadowBlur}px` : '0px');
-            root.style.setProperty('--text-shadow-opacity',  icons ? CARD_STYLE.textShadowOpacity      : '0');
+            root.style.setProperty('--text-top-offset',     `${CARD_STYLE.textTopOffset}%`);
+            root.style.setProperty('--text-font',           CARD_STYLE.textFont);
+            root.style.setProperty('--text-shadow-blur',    icons ? `${CARD_STYLE.textShadowBlur}px` : '0px');
+            root.style.setProperty('--text-shadow-opacity', icons ? CARD_STYLE.textShadowOpacity      : '0');
 
-            root.style.setProperty('--icon-band-display', icons ? 'block' : 'none');
-            root.style.setProperty('--icon-display',      icons ? 'flex'  : 'none');
+            root.style.setProperty('--icon-band-display',
+                (icons && CARD_STYLE.iconWindowHeight > 0) ? 'block' : 'none');
+            root.style.setProperty('--icon-display', icons ? 'flex' : 'none');
         }
 
         window.TIMINGS = TIMINGS;
@@ -1683,6 +1750,12 @@
                 const back = document.createElement('div');
                 back.className = 'tile-back';
                 if (item.emoji) {
+                    // Ghost emoji — scaled up, shadow-only filter, hidden behind real emoji
+                    const emojiShadowEl = document.createElement('div');
+                    emojiShadowEl.className = 'tile-emoji-shadow';
+                    emojiShadowEl.textContent = item.emoji;
+                    back.appendChild(emojiShadowEl);
+                    // Real emoji — no filter, sits on top
                     const emojiEl = document.createElement('div');
                     emojiEl.className = 'tile-emoji';
                     emojiEl.textContent = item.emoji;

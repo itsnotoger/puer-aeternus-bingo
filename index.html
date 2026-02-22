@@ -57,9 +57,6 @@
             flex-shrink: 0;
         }
 
-        /* ===== TOP BAR CONTROLS - unified family ===== */
-
-        /* Shared base for all interactive top-bar elements */
         .control-btn,
         .shuffle-btn,
         .settings-toggle-btn {
@@ -92,7 +89,6 @@
             background: rgba(255,255,255,0.22);
         }
 
-        /* Item count segmented control — one visual unit */
         .item-count-control {
             display: flex;
             align-items: center;
@@ -103,7 +99,6 @@
             overflow: hidden;
         }
 
-        /* ± buttons inside the segmented control */
         .item-count-control .control-btn {
             width: 32px;
             height: 100%;
@@ -137,7 +132,6 @@
             letter-spacing: 0.02em;
         }
 
-        /* Shuffle — a bit wider for the label */
         .shuffle-btn {
             gap: 6px;
             padding: 0 13px;
@@ -148,7 +142,6 @@
             color: rgba(255,255,255,0.9);
         }
 
-        /* Settings gear */
         .settings-toggle-btn {
             width: 36px;
             font-size: 16px;
@@ -159,7 +152,6 @@
             border-color: rgba(52, 152, 219, 0.6);
         }
 
-        /* Icons toggle pill */
         .icons-toggle-pill {
             display: flex;
             align-items: center;
@@ -223,7 +215,6 @@
             background: white;
         }
 
-        /* Seam blend: same transition as the panel, covers top bar shadow at the joint */
         #seamBlend {
             position: fixed;
             top: 55px;
@@ -245,7 +236,6 @@
             #seamBlend { display: none; }
         }
 
-        /* ===== SETTINGS BACKDROP ===== */
         .settings-backdrop {
             position: fixed;
             top: 56px;
@@ -259,7 +249,6 @@
             pointer-events: all;
         }
 
-        /* ===== SETTINGS PANEL ===== */
         .settings-panel {
             position: fixed;
             top: 56px;
@@ -297,7 +286,6 @@
             letter-spacing: 0.03em;
         }
 
-        /* ===== TABS ===== */
         .settings-tabs {
             display: flex;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
@@ -336,7 +324,6 @@
             border-bottom-color: #3498db;
         }
 
-        /* ===== SETTINGS CONTENT ===== */
         .settings-content {
             flex: 1;
             overflow-y: auto;
@@ -419,7 +406,6 @@
             background: rgba(52, 152, 219, 0.12);
         }
 
-        /* ===== TOGGLE SWITCH ===== */
         .toggle-label {
             position: relative;
             display: inline-block;
@@ -465,7 +451,6 @@
             background: white;
         }
 
-        /* ===== SLIDER CONTROL ===== */
         .slider-control {
             display: flex;
             align-items: center;
@@ -518,7 +503,6 @@
             font-variant-numeric: tabular-nums;
         }
 
-        /* ===== SETTINGS NOTE ===== */
         .settings-note {
             color: rgba(255, 255, 255, 0.25);
             font-size: 11px;
@@ -617,10 +601,14 @@
             top: var(--icon-top-offset);
             left: 0;
             right: 0;
-            height: var(--icon-window-height);
+            /* height is intentionally NOT tied to --icon-window-height;
+               the emoji is positioned independently via --icon-top-offset (px).
+               The ::after band is a separate visual element. */
+            height: auto;
             display: var(--icon-display);
             align-items: center;
             justify-content: center;
+            line-height: 1;
             font-size: var(--icon-size);
             opacity: 1;
             text-shadow:
@@ -778,7 +766,6 @@
             font-family: monospace;
         }
 
-        /* ===== MOBILE ===== */
         @media (max-width: 600px) {
             body {
                 padding: 10px;
@@ -811,7 +798,6 @@
                 display: none;
             }
 
-
             .bingo-tile {
                 font-size: 11px;
             }
@@ -825,7 +811,6 @@
                 padding: 10px;
             }
 
-            /* Bottom sheet on mobile */
             .settings-panel {
                 top: auto;
                 left: 0;
@@ -845,7 +830,6 @@
 </head>
 <body>
 
-    <!-- TOP BAR -->
     <div class="top-bar">
         <span class="top-bar-title">🎭 Puer Aeternus Bingo</span>
         <div class="top-bar-controls">
@@ -865,10 +849,8 @@
         </div>
     </div>
 
-    <!-- SETTINGS BACKDROP -->
     <div class="settings-backdrop" id="settingsBackdrop" onclick="closeSettings()"></div>
 
-    <!-- SETTINGS PANEL -->
     <div class="settings-panel" id="settingsPanel">
         <div class="settings-panel-header">
             <h2>⚙️ Settings</h2>
@@ -877,10 +859,8 @@
         <div class="settings-content" id="settingsContent"></div>
     </div>
 
-    <!-- BOARD -->
     <div class="bingo-container" id="bingoBoard"></div>
 
-    <!-- SEAM BLEND STRIP: slides in with the panel, covers the top bar's shadow at the seam -->
     <div id="seamBlend"></div>
     <div id="particleSandbox" style="position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 180;"></div>
 
@@ -929,10 +909,9 @@
         };
 
         const CARD_STYLE = {
-            showIcons: true,           // Master switch: false = minimalist mode (no icons, no shadows, no header band)
-
+            showIcons: true,
             iconSize: 44,
-            iconTopOffset: 0.5,
+            iconTopOffset: 4,   // px from top of card, supports negatives
             iconWindowHeight: 30,
             shadowOffsetY: 47,
             shadowBlur1: 15,
@@ -966,14 +945,6 @@
             }
         };
 
-        // ============================================================
-        // SETTINGS SCHEMA - one entry per exposed field
-        // ============================================================
-        // Defined after config objects exist. Each tab maps to one config object.
-        // 'path' supports dot notation for nested objects.
-        // Types: 'bool', 'int', 'float', 'string'
-        // onChange fires after every value update for that tab.
-        // ============================================================
         const CONFIG_SCHEMA = [
             {
                 tab: 'Timing',
@@ -998,7 +969,7 @@
                 note: null,
                 fields: [
                     { path: 'iconSize',          label: 'Icon Size',           type: 'int',        hint: 'px'            },
-                    { path: 'iconTopOffset',     label: 'Icon Top Offset',     type: 'percent100', min: 0,   max: 100    },
+                    { path: 'iconTopOffset',     label: 'Icon Top Offset',     type: 'int',        hint: 'px'            },
                     { path: 'iconWindowHeight',  label: 'Icon Window Height',  type: 'percent100', min: 0,   max: 100    },
                     { path: 'shadowOffsetY',     label: 'Shadow Offset Y',     type: 'int',        hint: 'px'            },
                     { path: 'shadowBlur1',       label: 'Shadow Blur 1',       type: 'int',        hint: 'px'            },
@@ -1071,7 +1042,7 @@
             root.style.setProperty('--spiral-in-duration',  `${TIMINGS.spiralInDuration}ms`);
 
             root.style.setProperty('--icon-size',          `${CARD_STYLE.iconSize}px`);
-            root.style.setProperty('--icon-top-offset',    `${CARD_STYLE.iconTopOffset}%`);
+            root.style.setProperty('--icon-top-offset',    `${CARD_STYLE.iconTopOffset}px`);  // px, not %
             root.style.setProperty('--icon-window-height', icons ? `${CARD_STYLE.iconWindowHeight}%` : '0%');
 
             root.style.setProperty('--shadow-offset-y', icons ? `${CARD_STYLE.shadowOffsetY}px` : '0px');
@@ -1096,7 +1067,7 @@
         initCSSVariables();
 
         // ============================================================
-        // SETTINGS PANEL - UI generation & management
+        // SETTINGS PANEL
         // ============================================================
         let activeSettingsTab = 0;
         let settingsOpen = false;
@@ -1136,7 +1107,7 @@
             for (const field of group.fields) {
                 const value = getConfigValue(group.config, field.path);
                 const inputId = `cfg-${tabIdx}-${field.path.replace(/\./g, '-')}`;
-                const safeKey = `'${field.path}'`; // paths never contain single quotes
+                const safeKey = `'${field.path}'`;
 
                 html += `<div class="settings-field">
                     <label class="field-label" for="${inputId}">
@@ -1151,8 +1122,6 @@
                         <span class="toggle-track"></span>
                     </label>`;
                 } else if (field.type === 'percent' || field.type === 'percent100') {
-                    // 'percent'    = stored 0-1,   displayed 0-100%
-                    // 'percent100' = stored 0-100, displayed 0-100%
                     const scale    = field.type === 'percent' ? 100 : 1;
                     const dispMin  = (field.min ?? 0) * scale;
                     const dispMax  = (field.max ?? 1) * scale;
@@ -1176,7 +1145,6 @@
                                     class="field-input"
                                     onchange="updateConfig(${tabIdx}, ${safeKey}, parseFloat(this.value) || 0)">`;
                 } else {
-                    // string
                     html += `<input type="text" id="${inputId}" value="${value}"
                                     class="field-input string-input"
                                     onchange="updateConfig(${tabIdx}, ${safeKey}, this.value)">`;
@@ -1186,11 +1154,7 @@
             }
 
             html += '</div>';
-
-            if (group.note) {
-                html += `<p class="settings-note">${group.note}</p>`;
-            }
-
+            if (group.note) html += `<p class="settings-note">${group.note}</p>`;
             contentEl.innerHTML = html;
         }
 
@@ -1203,7 +1167,6 @@
             activeSettingsTab = index;
             buildSettingsTabs();
             buildSettingsContent();
-            // Scroll content back to top on tab switch
             document.getElementById('settingsContent').scrollTop = 0;
         }
 
@@ -1211,7 +1174,6 @@
             CARD_STYLE.showIcons = !CARD_STYLE.showIcons;
             initCSSVariables();
             syncIconsBtn();
-            // If settings panel is open on Card tab, rebuild so the toggle reflects reality
             if (settingsOpen && activeSettingsTab === CONFIG_SCHEMA.findIndex(g => g.tab === 'Card')) {
                 buildSettingsContent();
             }
@@ -1244,46 +1206,49 @@
         }
 
         // ============================================================
-        // ITEMS
+        // ITEMS — embedded fallback for artifact-compatibility mode.
+        // The fetch() below will attempt items.json first (works when
+        // served as a real site); on failure it falls back to this
+        // inline data so the artifact runs standalone in chat.
         // ============================================================
-        const DEFAULT_ITEMS = `[
-["Untapped potential", "💎"],
-["Just keeping it casual (forever)", "🎭"],
-["Not ready for serious yet", "🚫"],
-["I need my freedom", "🦅"],
-["Planning feels like progress", "📋"],
-["Rejects interaction with NPC", "🎮"],
-["Quit when it gets hard", "🏃"],
-["If it's not perfect, why bother", "👑"],
-["Chronic restlessness", "🌊"],
-["Guilt because low productivity", "⚖️"],
-["I should be doing more", "📈"],
-["Starting new hobby", "🎨"],
-["Need to learn X before starting Y", "📚"],
-["Escape into fantasy", "🌙"],
-["Daydreaming precludes action", "☁️"],
-["Finding the dealbreaker (always)", "🔍"],
-["Spiritual growth over worldly success", "🧘"],
-["9-5 is a prison", "⛓️"],
-["My situation is uniquely complex", "❄️"],
-["Normal advice doesn't apply to me", "🎪"],
-["No one really gets me", "🎭"],
-["Keeping my options open", "🚪"],
-["External validation dependency", "👏"],
-["This is beneath me", "🗑️"],
-["Everyone's ahead of me", "🏁"],
-["I'm falling behind", "⏰"],
-["People will be looking at me critically", "👁️"],
-["Rather fail spectacularly than succeed ordinarily", "💥"],
-["My real life hasn't started yet", "⏸️"],
-["I could do that if I wanted to", "💭"],
-["What if something better comes along?", "🎰"],
-["I need to make a move soon", "♟️"],
-["Overthinking social encounter (with ChatGPT)", "🤖"],
-["Real life is like a video game (clear right/wrong)", "🎮"],
-["Recap without mentioning feelings", "📊"],
-["Problem solving by looking at facts", "🔬"]
-]`;
+        const FALLBACK_ITEMS = [
+            ["Untapped potential", "💎"],
+            ["Just keeping it casual (forever)", "🎭"],
+            ["Not ready for serious yet", "🚫"],
+            ["I need my freedom", "🦅"],
+            ["Planning feels like progress", "📋"],
+            ["Rejects interaction with NPC", "🎮"],
+            ["Quit when it gets hard", "🏃"],
+            ["If it's not perfect, why bother", "👑"],
+            ["Chronic restlessness", "🌊"],
+            ["Guilt because low productivity", "⚖️"],
+            ["I should be doing more", "📈"],
+            ["Starting new hobby", "🎨"],
+            ["Need to learn X before starting Y", "📚"],
+            ["Escape into fantasy", "🌙"],
+            ["Daydreaming precludes action", "☁️"],
+            ["Finding the dealbreaker (always)", "🔍"],
+            ["Spiritual growth over worldly success", "🧘"],
+            ["9-5 is a prison", "⛓️"],
+            ["My situation is uniquely complex", "❄️"],
+            ["Normal advice doesn't apply to me", "🎪"],
+            ["No one really gets me", "🎭"],
+            ["Keeping my options open", "🚪"],
+            ["External validation dependency", "👏"],
+            ["This is beneath me", "🗑️"],
+            ["Everyone's ahead of me", "🏁"],
+            ["I'm falling behind", "⏰"],
+            ["People will be looking at me critically", "👁️"],
+            ["Rather fail spectacularly than succeed ordinarily", "💥"],
+            ["My real life hasn't started yet", "⏸️"],
+            ["I could do that if I wanted to", "💭"],
+            ["What if something better comes along?", "🎰"],
+            ["I need to make a move soon", "♟️"],
+            ["Overthinking social encounter (with ChatGPT)", "🤖"],
+            ["Real life is like a video game (clear right/wrong)", "🎮"],
+            ["Recap without mentioning feelings", "📊"],
+            ["Problem solving by looking at facts", "🔬"]
+        ];
 
         let currentItemCount = 25;
         let availableItems = [];
@@ -1498,7 +1463,18 @@
             fragment.style.textAlign = 'center';
             fragment.style.padding = cs.padding;
             const textEl = sourceElement.querySelector('.tile-text');
-            if (textEl) { fragment.textContent = textEl.textContent; }
+            if (textEl) {
+                // Reproduce the .tile-text element so --text-top-offset CSS variable
+                // applies correctly, matching the actual tile position during the rip.
+                const fragText = document.createElement('div');
+                fragText.className = 'tile-text';
+                fragText.textContent = textEl.textContent;
+                // Fragment is position:absolute so absolute children work relative to it.
+                // Remove flex centering — the absolute tile-text handles its own layout.
+                fragment.style.alignItems = 'unset';
+                fragment.style.justifyContent = 'unset';
+                fragment.appendChild(fragText);
+            }
             return fragment;
         }
 
@@ -1625,29 +1601,28 @@
         async function loadItemsOnce() {
             if (itemsLoadedOnce) return;
 
-            let jsonData = DEFAULT_ITEMS;
-
+            // Try to load items.json (works on the real hosted site).
+            // Fall back to the inline FALLBACK_ITEMS for artifact mode.
+            let parsed = null;
             try {
                 const response = await fetch('items.json');
                 if (response.ok) {
                     const text = await response.text();
                     if (text.trim().length > 0) {
-                        jsonData = text;
+                        parsed = JSON.parse(text);
                     }
                 }
-            } catch (error) {
-                // Use default
+            } catch (_) {
+                // Network not available in artifact context — use fallback below.
             }
 
-            try {
-                const parsed = JSON.parse(jsonData);
-                availableItems = parsed.map((item, index) => ({
-                    text: item[0], emoji: item[1], lineNumber: index + 1
-                }));
-            } catch (error) {
-                console.error('Failed to parse items JSON:', error);
-                availableItems = [];
+            if (!parsed) {
+                parsed = FALLBACK_ITEMS;
             }
+
+            availableItems = parsed.map((item, index) => ({
+                text: item[0], emoji: item[1], lineNumber: index + 1
+            }));
 
             itemsLoadedOnce = true;
             console.log(`Loaded ${availableItems.length} items`);
@@ -1738,7 +1713,7 @@
                 }
             });
 
-            board.offsetHeight; // force reflow
+            board.offsetHeight;
 
             tiles.forEach((tile, index) => {
                 const inner = tile.querySelector('.tile-inner');

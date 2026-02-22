@@ -35,7 +35,7 @@
             align-items: center;
             padding: 0 16px;
             gap: 10px;
-            z-index: 100;
+            z-index: 300;
             box-shadow: 0 2px 16px rgba(0,0,0,0.5);
         }
 
@@ -57,104 +57,173 @@
             flex-shrink: 0;
         }
 
-        .item-count-control {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            background: rgba(255,255,255,0.08);
-            border-radius: 8px;
-            padding: 3px 6px;
-        }
+        /* ===== TOP BAR CONTROLS - unified family ===== */
 
-        .control-btn {
-            background: #3498db;
-            color: white;
-            border: none;
-            width: 28px;
-            height: 28px;
-            border-radius: 5px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            line-height: 1;
-        }
-
-        .control-btn:hover {
-            background: #2980b9;
-            transform: scale(1.1);
-        }
-
-        .control-btn:active {
-            transform: scale(0.95);
-        }
-
-        .item-count {
-            font-size: 15px;
-            font-weight: bold;
-            color: white;
-            min-width: 28px;
-            text-align: center;
-        }
-
-        .shuffle-btn {
+        /* Shared base for all interactive top-bar elements */
+        .control-btn,
+        .shuffle-btn,
+        .settings-toggle-btn {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            background: #27ae60;
+            justify-content: center;
+            height: 36px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.14);
+            border-radius: 8px;
             color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 7px;
-            font-size: 13px;
-            font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: background 0.2s, border-color 0.2s;
+            flex-shrink: 0;
+            user-select: none;
             white-space: nowrap;
         }
 
-        .shuffle-btn:hover {
-            background: #229954;
-            transform: translateY(-1px);
+        .control-btn:hover,
+        .shuffle-btn:hover,
+        .settings-toggle-btn:hover {
+            background: rgba(255,255,255,0.16);
+            border-color: rgba(255,255,255,0.28);
         }
 
-        .shuffle-btn:active {
-            transform: translateY(0);
+        .control-btn:active,
+        .shuffle-btn:active,
+        .settings-toggle-btn:active {
+            background: rgba(255,255,255,0.22);
         }
 
-        .settings-toggle-btn {
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.15);
-            color: white;
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
-            font-size: 18px;
-            cursor: pointer;
+        /* Item count segmented control — one visual unit */
+        .item-count-control {
             display: flex;
             align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-            flex-shrink: 0;
+            height: 36px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.14);
+            border-radius: 8px;
+            overflow: hidden;
         }
 
-        .settings-toggle-btn:hover {
-            background: rgba(255,255,255,0.18);
-            border-color: rgba(255,255,255,0.3);
+        /* ± buttons inside the segmented control */
+        .item-count-control .control-btn {
+            width: 32px;
+            height: 100%;
+            border: none;
+            border-radius: 0;
+            background: transparent;
+            font-size: 20px;
+            font-weight: 300;
+            line-height: 1;
+        }
+
+        .item-count-control .control-btn:hover {
+            background: rgba(255,255,255,0.14);
+            border-color: transparent;
+        }
+
+        .item-count-control .control-btn:first-child {
+            border-right: 1px solid rgba(255,255,255,0.12);
+        }
+
+        .item-count-control .control-btn:last-child {
+            border-left: 1px solid rgba(255,255,255,0.12);
+        }
+
+        .item-count {
+            font-size: 14px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.9);
+            min-width: 32px;
+            text-align: center;
+            letter-spacing: 0.02em;
+        }
+
+        /* Shuffle — a bit wider for the label */
+        .shuffle-btn {
+            gap: 6px;
+            padding: 0 13px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* Settings gear */
+        .settings-toggle-btn {
+            width: 36px;
+            font-size: 16px;
         }
 
         .settings-toggle-btn.active {
-            background: rgba(52, 152, 219, 0.3);
-            border-color: #3498db;
+            background: rgba(52, 152, 219, 0.25);
+            border-color: rgba(52, 152, 219, 0.6);
+        }
+
+        /* Icons toggle pill */
+        .icons-toggle-pill {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            height: 36px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.14);
+            border-radius: 8px;
+            padding: 0 10px 0 10px;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+            user-select: none;
+            flex-shrink: 0;
+        }
+
+        .icons-toggle-pill:hover {
+            background: rgba(255,255,255,0.16);
+            border-color: rgba(255,255,255,0.28);
+        }
+
+        .icons-toggle-pill .pill-label {
+            color: rgba(255,255,255,0.6);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .icons-toggle-pill.active .pill-label {
+            color: rgba(255,255,255,0.9);
+        }
+
+        .icons-toggle-pill .mini-track {
+            position: relative;
+            width: 34px;
+            height: 20px;
+            background: rgba(255,255,255,0.12);
+            border-radius: 20px;
+            transition: background 0.25s;
+            flex-shrink: 0;
+        }
+
+        .icons-toggle-pill .mini-track::before {
+            content: '';
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            left: 3px;
+            top: 3px;
+            background: rgba(255,255,255,0.55);
+            border-radius: 50%;
+            transition: transform 0.25s, background 0.25s;
+        }
+
+        .icons-toggle-pill.active .mini-track {
+            background: #27ae60;
+        }
+
+        .icons-toggle-pill.active .mini-track::before {
+            transform: translateX(14px);
+            background: white;
         }
 
         /* ===== SETTINGS BACKDROP ===== */
         .settings-backdrop {
             position: fixed;
-            inset: 0;
+            top: 56px;
+            left: 0; right: 0; bottom: 0;
             background: transparent;
             z-index: 150;
             pointer-events: none;
@@ -167,7 +236,7 @@
         /* ===== SETTINGS PANEL ===== */
         .settings-panel {
             position: fixed;
-            top: 0;
+            top: 56px;
             right: 0;
             bottom: 0;
             width: 380px;
@@ -178,11 +247,11 @@
             flex-direction: column;
             transform: translateX(100%);
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: -8px 0 40px 4px rgba(0, 0, 0, 0.7), -2px 0 12px rgba(0, 0, 0, 0.5);
         }
 
         .settings-panel.open {
             transform: translateX(0);
+            box-shadow: -8px 0 40px 4px rgba(0, 0, 0, 0.7), -2px 0 12px rgba(0, 0, 0, 0.5);
         }
 
         .settings-panel-header {
@@ -200,27 +269,6 @@
             font-size: 16px;
             font-weight: 700;
             letter-spacing: 0.03em;
-        }
-
-        .settings-close-btn {
-            background: none;
-            border: none;
-            color: rgba(255, 255, 255, 0.4);
-            font-size: 22px;
-            cursor: pointer;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 6px;
-            transition: all 0.2s;
-            line-height: 1;
-        }
-
-        .settings-close-btn:hover {
-            background: rgba(255, 255, 255, 0.08);
-            color: white;
         }
 
         /* ===== TABS ===== */
@@ -721,6 +769,18 @@
                 font-size: 14px;
             }
 
+            .control-btn,
+            .shuffle-btn,
+            .settings-toggle-btn,
+            .icons-toggle-pill,
+            .item-count-control {
+                height: 32px;
+            }
+
+            .settings-toggle-btn {
+                width: 32px;
+            }
+
             .shuffle-btn .shuffle-label {
                 display: none;
             }
@@ -747,11 +807,11 @@
                 height: 75vh;
                 border-radius: 16px 16px 0 0;
                 transform: translateY(100%);
-                box-shadow: 0 -4px 32px rgba(0, 0, 0, 0.6);
             }
 
             .settings-panel.open {
                 transform: translateY(0);
+                box-shadow: 0 -4px 32px rgba(0, 0, 0, 0.6);
             }
         }
     </style>
@@ -770,6 +830,10 @@
             <button class="shuffle-btn" onclick="shuffleBoard()">
                 <span>🔀</span><span class="shuffle-label">Shuffle</span>
             </button>
+            <div class="icons-toggle-pill" id="iconsTogglePill" onclick="toggleIcons()">
+                <span class="pill-label">Icons</span>
+                <span class="mini-track"></span>
+            </div>
             <button class="settings-toggle-btn" id="settingsToggleBtn" onclick="toggleSettings()" title="Settings">⚙️</button>
         </div>
     </div>
@@ -781,7 +845,6 @@
     <div class="settings-panel" id="settingsPanel">
         <div class="settings-panel-header">
             <h2>⚙️ Settings</h2>
-            <button class="settings-close-btn" onclick="closeSettings()">✕</button>
         </div>
         <div class="settings-tabs" id="settingsTabs"></div>
         <div class="settings-content" id="settingsContent"></div>
@@ -791,7 +854,7 @@
     <div class="bingo-container" id="bingoBoard"></div>
 
     <!-- PARTICLE SANDBOX -->
-    <div id="particleSandbox" style="position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 9999;"></div>
+    <div id="particleSandbox" style="position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 180;"></div>
 
     <script>
         // ============================================================
@@ -906,7 +969,6 @@
                 onChange: () => initCSSVariables(),
                 note: null,
                 fields: [
-                    { path: 'showIcons',         label: 'Show Icons',          type: 'bool'                              },
                     { path: 'iconSize',          label: 'Icon Size',           type: 'int',        hint: 'px'            },
                     { path: 'iconTopOffset',     label: 'Icon Top Offset',     type: 'percent100', min: 0,   max: 100    },
                     { path: 'iconWindowHeight',  label: 'Icon Window Height',  type: 'percent100', min: 0,   max: 100    },
@@ -1117,12 +1179,23 @@
             document.getElementById('settingsContent').scrollTop = 0;
         }
 
-        function toggleSettings() {
-            if (settingsOpen) {
-                closeSettings();
-            } else {
-                openSettings();
+        function toggleIcons() {
+            CARD_STYLE.showIcons = !CARD_STYLE.showIcons;
+            initCSSVariables();
+            syncIconsBtn();
+            // If settings panel is open on Card tab, rebuild so the toggle reflects reality
+            if (settingsOpen && activeSettingsTab === CONFIG_SCHEMA.findIndex(g => g.tab === 'Card')) {
+                buildSettingsContent();
             }
+        }
+
+        function syncIconsBtn() {
+            const pill = document.getElementById('iconsTogglePill');
+            if (pill) pill.classList.toggle('active', CARD_STYLE.showIcons);
+        }
+
+        function toggleSettings() {
+            if (settingsOpen) closeSettings(); else openSettings();
         }
 
         function openSettings() {
@@ -1656,6 +1729,7 @@
         // INITIALIZATION
         // ============================================================
         async function initBoard() {
+            syncIconsBtn();
             renderPlaceholders();
             await populateBoard();
         }

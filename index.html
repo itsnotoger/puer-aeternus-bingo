@@ -20,55 +20,67 @@
             flex-direction: column;
             align-items: center;
             padding: 20px;
-            padding-top: 80px;
+            padding-top: 76px;
         }
 
-        h1 {
-            color: white;
-            margin-bottom: 30px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-            position: relative;
-        }
-
-        .controls {
+        /* ===== TOP BAR ===== */
+        .top-bar {
             position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(255,255,255,0.95);
-            padding: 15px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            min-width: 150px;
-        }
-
-        .controls h3 {
-            margin: 0;
-            font-size: 14px;
-            color: #2c3e50;
-            text-align: center;
-        }
-
-        .control-row {
+            top: 0; left: 0; right: 0;
+            height: 56px;
+            background: rgba(22, 32, 42, 0.97);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            padding: 0 16px;
             gap: 10px;
+            z-index: 100;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.5);
+        }
+
+        .top-bar-title {
+            color: white;
+            font-size: 17px;
+            font-weight: bold;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .top-bar-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .item-count-control {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 8px;
+            padding: 3px 6px;
         }
 
         .control-btn {
             background: #3498db;
             color: white;
             border: none;
-            width: 30px;
-            height: 30px;
+            width: 28px;
+            height: 28px;
             border-radius: 5px;
             font-size: 18px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
         }
 
         .control-btn:hover {
@@ -81,30 +93,27 @@
         }
 
         .item-count {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
-            color: #2c3e50;
-            min-width: 40px;
+            color: white;
+            min-width: 28px;
             text-align: center;
         }
 
         .shuffle-btn {
             display: inline-flex;
             align-items: center;
-            justify-content: space-evenly;
+            gap: 6px;
             background: #27ae60;
             color: white;
             border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            font-size: 14px;
+            padding: 6px 12px;
+            border-radius: 7px;
+            font-size: 13px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
-        }
-
-        .shuffle-btn > :nth-child(odd) {
-            font-size: large;
+            white-space: nowrap;
         }
 
         .shuffle-btn:hover {
@@ -116,16 +125,348 @@
             transform: translateY(0);
         }
 
+        .settings-toggle-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .settings-toggle-btn:hover {
+            background: rgba(255,255,255,0.18);
+            border-color: rgba(255,255,255,0.3);
+        }
+
+        .settings-toggle-btn.active {
+            background: rgba(52, 152, 219, 0.3);
+            border-color: #3498db;
+        }
+
+        /* ===== SETTINGS BACKDROP ===== */
+        .settings-backdrop {
+            position: fixed;
+            inset: 0;
+            background: transparent;
+            z-index: 150;
+            pointer-events: none;
+        }
+
+        .settings-backdrop.open {
+            pointer-events: all;
+        }
+
+        /* ===== SETTINGS PANEL ===== */
+        .settings-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 380px;
+            max-width: 100vw;
+            background: #18242f;
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: -8px 0 40px 4px rgba(0, 0, 0, 0.7), -2px 0 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .settings-panel.open {
+            transform: translateX(0);
+        }
+
+        .settings-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            height: 56px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            flex-shrink: 0;
+        }
+
+        .settings-panel-header h2 {
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+        }
+
+        .settings-close-btn {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 22px;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: all 0.2s;
+            line-height: 1;
+        }
+
+        .settings-close-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+        }
+
+        /* ===== TABS ===== */
+        .settings-tabs {
+            display: flex;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            flex-shrink: 0;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .settings-tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .settings-tab-btn {
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: rgba(255, 255, 255, 0.4);
+            padding: 11px 16px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            flex-shrink: 0;
+        }
+
+        .settings-tab-btn:hover {
+            color: rgba(255, 255, 255, 0.75);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .settings-tab-btn.active {
+            color: #3498db;
+            border-bottom-color: #3498db;
+        }
+
+        /* ===== SETTINGS CONTENT ===== */
+        .settings-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 12px 24px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.15) transparent;
+        }
+
+        .settings-content::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .settings-content::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.15);
+            border-radius: 4px;
+        }
+
+        .settings-fields {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+
+        .settings-field {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 9px 10px;
+            border-radius: 8px;
+            gap: 12px;
+            transition: background 0.15s;
+        }
+
+        .settings-field:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .field-label {
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 13px;
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+
+        .field-hint {
+            color: rgba(255, 255, 255, 0.28);
+            font-size: 11px;
+            font-family: monospace;
+            flex-shrink: 0;
+        }
+
+        .field-input {
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 6px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 13px;
+            padding: 5px 8px;
+            width: 86px;
+            text-align: right;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .field-input.string-input {
+            width: 140px;
+            text-align: left;
+        }
+
+        .field-input:hover {
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .field-input:focus {
+            outline: none;
+            border-color: #3498db;
+            background: rgba(52, 152, 219, 0.12);
+        }
+
+        /* ===== TOGGLE SWITCH ===== */
+        .toggle-label {
+            position: relative;
+            display: inline-block;
+            width: 42px;
+            height: 24px;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        .toggle-label input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+            position: absolute;
+        }
+
+        .toggle-track {
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 24px;
+            transition: background 0.25s;
+        }
+
+        .toggle-track::before {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            left: 3px;
+            top: 3px;
+            background: rgba(255,255,255,0.7);
+            border-radius: 50%;
+            transition: transform 0.25s, background 0.25s;
+        }
+
+        .toggle-label input:checked + .toggle-track {
+            background: #27ae60;
+        }
+
+        .toggle-label input:checked + .toggle-track::before {
+            transform: translateX(18px);
+            background: white;
+        }
+
+        /* ===== SLIDER CONTROL ===== */
+        .slider-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .slider-input {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100px;
+            height: 4px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.15);
+            outline: none;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .slider-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #3498db;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s;
+        }
+
+        .slider-input::-webkit-slider-thumb:hover {
+            background: #5dade2;
+            transform: scale(1.2);
+        }
+
+        .slider-input::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            border: none;
+            border-radius: 50%;
+            background: #3498db;
+            cursor: pointer;
+        }
+
+        .slider-value {
+            color: rgba(255,255,255,0.7);
+            font-size: 12px;
+            min-width: 36px;
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* ===== SETTINGS NOTE ===== */
+        .settings-note {
+            color: rgba(255, 255, 255, 0.25);
+            font-size: 11px;
+            text-align: center;
+            margin-top: 20px;
+            padding: 10px 16px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            font-style: italic;
+            line-height: 1.5;
+        }
+
+        /* ===== BINGO BOARD ===== */
         .bingo-container {
             display: grid;
             gap: 10px;
             max-width: 800px;
             min-width: 0;
             width: 100%;
-            background: rgba(255,255,255,0.1);
+            background: rgba(255, 255, 255, 0.1);
             padding: 20px;
             border-radius: 15px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             overflow: hidden;
             position: relative;
         }
@@ -196,7 +537,7 @@
             pointer-events: none;
             display: var(--icon-band-display);
         }
-        
+
         .tile-emoji {
             position: absolute;
             top: var(--icon-top-offset);
@@ -208,7 +549,7 @@
             justify-content: center;
             font-size: var(--icon-size);
             opacity: 1;
-            text-shadow: 
+            text-shadow:
                 0 var(--shadow-offset-y) var(--shadow-blur-1) rgba(0, 0, 0, var(--shadow-opacity)),
                 0 var(--shadow-offset-y) var(--shadow-blur-2) rgba(0, 0, 0, var(--shadow-opacity)),
                 0 var(--shadow-offset-y) var(--shadow-blur-3) rgba(0, 0, 0, var(--shadow-opacity));
@@ -230,11 +571,11 @@
             font-family: var(--text-font);
             z-index: 2;
         }
-        
+
         .tile-back .tile-text {
             text-shadow: 0 0 var(--text-shadow-blur) rgba(0, 0, 0, var(--text-shadow-opacity));
         }
-        
+
         .tile-front .tile-text {
             position: absolute;
             top: calc(50% + var(--text-top-offset));
@@ -266,7 +607,7 @@
 
         .bingo-tile:not(.empty):hover .tile-inner {
             transform: rotateY(15deg);
-            box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
         }
 
         .bingo-tile.marked:not(.empty):hover .tile-inner {
@@ -301,18 +642,18 @@
 
         @keyframes violentDestruction {
             0% {
-                transform: translate(var(--start-x), var(--start-y)) 
-                           scale(var(--start-scale)) 
-                           rotateX(var(--rot-x-start)) 
-                           rotateY(var(--rot-y-start)) 
+                transform: translate(var(--start-x), var(--start-y))
+                           scale(var(--start-scale))
+                           rotateX(var(--rot-x-start))
+                           rotateY(var(--rot-y-start))
                            rotateZ(var(--rot-z-start));
                 opacity: var(--start-opacity);
             }
             100% {
-                transform: translate(var(--end-x), var(--end-y)) 
-                           scale(0) 
-                           rotateX(var(--rot-x-end)) 
-                           rotateY(var(--rot-y-end)) 
+                transform: translate(var(--end-x), var(--end-y))
+                           scale(0)
+                           rotateX(var(--rot-x-end))
+                           rotateY(var(--rot-y-end))
                            rotateZ(var(--rot-z-end));
                 opacity: 0;
             }
@@ -363,7 +704,27 @@
             font-family: monospace;
         }
 
+        /* ===== MOBILE ===== */
         @media (max-width: 600px) {
+            body {
+                padding: 10px;
+                padding-top: 68px;
+            }
+
+            .top-bar {
+                height: 52px;
+                padding: 0 10px;
+                gap: 6px;
+            }
+
+            .top-bar-title {
+                font-size: 14px;
+            }
+
+            .shuffle-btn .shuffle-label {
+                display: none;
+            }
+
             .bingo-tile {
                 font-size: 11px;
             }
@@ -376,26 +737,66 @@
                 gap: 5px;
                 padding: 10px;
             }
+
+            /* Bottom sheet on mobile */
+            .settings-panel {
+                top: auto;
+                left: 0;
+                right: 0;
+                width: 100%;
+                height: 75vh;
+                border-radius: 16px 16px 0 0;
+                transform: translateY(100%);
+                box-shadow: 0 -4px 32px rgba(0, 0, 0, 0.6);
+            }
+
+            .settings-panel.open {
+                transform: translateY(0);
+            }
         }
     </style>
 </head>
 <body>
-    <div class="controls">
-        <h3>Items to Use</h3>
-        <div class="control-row">
-            <button class="control-btn" onclick="decreaseItems()">-</button>
-            <span class="item-count" id="itemCount">25</span>
-            <button class="control-btn" onclick="increaseItems()">+</button>
+
+    <!-- TOP BAR -->
+    <div class="top-bar">
+        <span class="top-bar-title">🎭 Puer Aeternus Bingo</span>
+        <div class="top-bar-controls">
+            <div class="item-count-control">
+                <button class="control-btn" onclick="decreaseItems()">−</button>
+                <span class="item-count" id="itemCount">25</span>
+                <button class="control-btn" onclick="increaseItems()">+</button>
+            </div>
+            <button class="shuffle-btn" onclick="shuffleBoard()">
+                <span>🔀</span><span class="shuffle-label">Shuffle</span>
+            </button>
+            <button class="settings-toggle-btn" id="settingsToggleBtn" onclick="toggleSettings()" title="Settings">⚙️</button>
         </div>
-        <button class="shuffle-btn" onclick="shuffleBoard()"><span>🔀</span><span>Shuffle</span></button>
     </div>
-    
-    <h1>🎭 Puer Aeternus Bingo</h1>
+
+    <!-- SETTINGS BACKDROP -->
+    <div class="settings-backdrop" id="settingsBackdrop" onclick="closeSettings()"></div>
+
+    <!-- SETTINGS PANEL -->
+    <div class="settings-panel" id="settingsPanel">
+        <div class="settings-panel-header">
+            <h2>⚙️ Settings</h2>
+            <button class="settings-close-btn" onclick="closeSettings()">✕</button>
+        </div>
+        <div class="settings-tabs" id="settingsTabs"></div>
+        <div class="settings-content" id="settingsContent"></div>
+    </div>
+
+    <!-- BOARD -->
     <div class="bingo-container" id="bingoBoard"></div>
-    
+
+    <!-- PARTICLE SANDBOX -->
     <div id="particleSandbox" style="position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 9999;"></div>
 
     <script>
+        // ============================================================
+        // MASTER CONFIGURATION
+        // ============================================================
         const TIMINGS = {
             flipDuration: 600,
             minRipDuration: 1000,
@@ -426,16 +827,16 @@
                 startOpacityMin: 0.7,
                 startOpacityMax: 1.0,
                 colors: [
-                    { bg: 'rgba(20, 20, 35, 0.9)', glow: 'rgba(40, 40, 80, 0.5)' },
-                    { bg: 'rgba(30, 25, 40, 0.85)', glow: 'rgba(50, 40, 70, 0.4)' },
-                    { bg: 'rgba(15, 15, 25, 0.95)', glow: 'rgba(30, 30, 50, 0.6)' },
-                    { bg: 'rgba(25, 20, 45, 0.8)', glow: 'rgba(60, 50, 90, 0.3)' },
-                    { bg: 'rgba(40, 50, 80, 0.7)', glow: 'rgba(70, 90, 130, 0.4)' }
+                    { bg: 'rgba(20, 20, 35, 0.9)',  glow: 'rgba(40, 40, 80, 0.5)'  },
+                    { bg: 'rgba(30, 25, 40, 0.85)', glow: 'rgba(50, 40, 70, 0.4)'  },
+                    { bg: 'rgba(15, 15, 25, 0.95)', glow: 'rgba(30, 30, 50, 0.6)'  },
+                    { bg: 'rgba(25, 20, 45, 0.8)',  glow: 'rgba(60, 50, 90, 0.3)'  },
+                    { bg: 'rgba(40, 50, 80, 0.7)',  glow: 'rgba(70, 90, 130, 0.4)' }
                 ],
                 easingFunctions: ['ease-in', 'ease-out', 'linear', 'ease-in-out']
             }
         };
-        
+
         const CARD_STYLE = {
             showIcons: true,           // Master switch: false = minimalist mode (no icons, no shadows, no header band)
 
@@ -452,7 +853,7 @@
             textShadowBlur: 15,
             textShadowOpacity: 1
         };
-        
+
         const RIP_CONFIG = {
             jitter: 15,
             edgeRoughness: {
@@ -474,30 +875,126 @@
             }
         };
 
+        // ============================================================
+        // SETTINGS SCHEMA - one entry per exposed field
+        // ============================================================
+        // Defined after config objects exist. Each tab maps to one config object.
+        // 'path' supports dot notation for nested objects.
+        // Types: 'bool', 'int', 'float', 'string'
+        // onChange fires after every value update for that tab.
+        // ============================================================
+        const CONFIG_SCHEMA = [
+            {
+                tab: 'Timing',
+                config: TIMINGS,
+                onChange: () => initCSSVariables(),
+                note: null,
+                fields: [
+                    { path: 'flipDuration',          label: 'Flip Duration',           type: 'int',   hint: 'ms' },
+                    { path: 'minRipDuration',         label: 'Min Rip Duration',        type: 'int',   hint: 'ms' },
+                    { path: 'maxRipDuration',         label: 'Max Rip Duration',        type: 'int',   hint: 'ms' },
+                    { path: 'spiralInDuration',       label: 'Spiral-In Duration',      type: 'int',   hint: 'ms' },
+                    { path: 'flipbackWait',           label: 'Flipback Wait',           type: 'int',   hint: 'ms' },
+                    { path: 'maxStaggerDelay',        label: 'Max Stagger Delay',       type: 'int',   hint: 'ms' },
+                    { path: 'debounceDelay',          label: 'Debounce Delay',          type: 'int',   hint: 'ms' },
+                    { path: 'minPlaceholderDisplay',  label: 'Min Placeholder Display', type: 'int',   hint: 'ms' },
+                ]
+            },
+            {
+                tab: 'Card',
+                config: CARD_STYLE,
+                onChange: () => initCSSVariables(),
+                note: null,
+                fields: [
+                    { path: 'showIcons',         label: 'Show Icons',          type: 'bool'                              },
+                    { path: 'iconSize',          label: 'Icon Size',           type: 'int',        hint: 'px'            },
+                    { path: 'iconTopOffset',     label: 'Icon Top Offset',     type: 'percent100', min: 0,   max: 100    },
+                    { path: 'iconWindowHeight',  label: 'Icon Window Height',  type: 'percent100', min: 0,   max: 100    },
+                    { path: 'shadowOffsetY',     label: 'Shadow Offset Y',     type: 'int',        hint: 'px'            },
+                    { path: 'shadowBlur1',       label: 'Shadow Blur 1',       type: 'int',        hint: 'px'            },
+                    { path: 'shadowBlur2',       label: 'Shadow Blur 2',       type: 'int',        hint: 'px'            },
+                    { path: 'shadowBlur3',       label: 'Shadow Blur 3',       type: 'int',        hint: 'px'            },
+                    { path: 'shadowOpacity',     label: 'Shadow Opacity',      type: 'percent',    min: 0,   max: 1      },
+                    { path: 'textTopOffset',     label: 'Text Top Offset',     type: 'percent100', min: -50, max: 50     },
+                    { path: 'textFont',          label: 'Text Font',           type: 'string'                            },
+                    { path: 'textShadowBlur',    label: 'Text Shadow Blur',    type: 'int',        hint: 'px'            },
+                    { path: 'textShadowOpacity', label: 'Text Shadow Opacity', type: 'percent',    min: 0,   max: 1      },
+                ]
+            },
+            {
+                tab: 'Rip',
+                config: RIP_CONFIG,
+                onChange: () => debouncedRefresh(),
+                note: null,
+                fields: [
+                    { path: 'jitter',                              label: 'Jitter',                       type: 'int'                              },
+                    { path: 'edgeRoughness.extraPointsPerEdge',    label: 'Edge Extra Points',            type: 'int'                              },
+                    { path: 'edgeRoughness.maxDeviationPx',        label: 'Edge Max Deviation',           type: 'float',    hint: 'px'            },
+                    { path: 'vortex.spiralDirection',              label: 'Spiral Direction',             type: 'int'                              },
+                    { path: 'vortex.relativeRotationSpeedMin',     label: 'Rel. Rotation Min',            type: 'int',      hint: '°/s'           },
+                    { path: 'vortex.relativeRotationSpeedMax',     label: 'Rel. Rotation Max',            type: 'int',      hint: '°/s'           },
+                    { path: 'vortex.fragmentRotationVariation',    label: 'Fragment Rotation Variation',  type: 'int',      hint: '°'             },
+                    { path: 'vortex.orbitalSpeedMin',              label: 'Orbital Speed Min',            type: 'float',    hint: 'rev/s'         },
+                    { path: 'vortex.orbitalSpeedMax',              label: 'Orbital Speed Max',            type: 'float',    hint: 'rev/s'         },
+                    { path: 'vortex.fragmentOrbitVariation',       label: 'Fragment Orbit Variation',     type: 'float'                           },
+                    { path: 'vortex.centerGapPercent',             label: 'Center Gap',                   type: 'percent',  min: 0, max: 1        },
+                    { path: 'vortex.opacityStart',                 label: 'Opacity Fade Start',           type: 'percent',  min: 0, max: 1        },
+                    { path: 'vortex.easePower',                    label: 'Ease Power',                   type: 'float'                           },
+                    { path: 'vortex.spiralKeyframes',              label: 'Spiral Keyframes',             type: 'int'                              },
+                ]
+            },
+            {
+                tab: 'Particles',
+                config: PARTICLE_CONFIG.chaos,
+                onChange: () => debouncedRefresh(),
+                note: null,
+                fields: [
+                    { path: 'count',                  label: 'Count',                    type: 'int'                           },
+                    { path: 'minSize',                label: 'Min Size',                 type: 'int',     hint: 'px'           },
+                    { path: 'maxSize',                label: 'Max Size',                 type: 'int',     hint: 'px'           },
+                    { path: 'minDuration',            label: 'Min Duration',             type: 'int',     hint: 'ms'           },
+                    { path: 'maxDuration',            label: 'Max Duration',             type: 'int',     hint: 'ms'           },
+                    { path: 'maxStartDelay',          label: 'Max Start Delay',          type: 'int',     hint: 'ms'           },
+                    { path: 'spawnRadiusMultiplier',  label: 'Spawn Radius Multiplier',  type: 'float'                         },
+                    { path: 'angleVariationRad',      label: 'Angle Variation',          type: 'float',   hint: 'rad'          },
+                    { path: 'overshootMinMult',       label: 'Overshoot Min',            type: 'float'                         },
+                    { path: 'overshootMaxMult',       label: 'Overshoot Max',            type: 'float'                         },
+                    { path: 'rotationMin',            label: 'Rotation Min',             type: 'int',     hint: '°'            },
+                    { path: 'rotationMax',            label: 'Rotation Max',             type: 'int',     hint: '°'            },
+                    { path: 'startScaleMin',          label: 'Start Scale Min',          type: 'float'                         },
+                    { path: 'startScaleMax',          label: 'Start Scale Max',          type: 'float'                         },
+                    { path: 'startOpacityMin',        label: 'Start Opacity Min',        type: 'percent', min: 0, max: 1       },
+                    { path: 'startOpacityMax',        label: 'Start Opacity Max',        type: 'percent', min: 0, max: 1       },
+                ]
+            },
+        ];
+
+        // ============================================================
+        // CSS VARIABLES
+        // ============================================================
         function initCSSVariables() {
             const root = document.documentElement;
             const icons = CARD_STYLE.showIcons;
 
-            root.style.setProperty('--flip-duration', `${TIMINGS.flipDuration}ms`);
-            root.style.setProperty('--rip-duration', `${TIMINGS.maxRipDuration}ms`);
-            root.style.setProperty('--spiral-in-duration', `${TIMINGS.spiralInDuration}ms`);
-            root.style.setProperty('--icon-size', `${CARD_STYLE.iconSize}px`);
-            root.style.setProperty('--icon-top-offset', `${CARD_STYLE.iconTopOffset}%`);
+            root.style.setProperty('--flip-duration',       `${TIMINGS.flipDuration}ms`);
+            root.style.setProperty('--rip-duration',        `${TIMINGS.maxRipDuration}ms`);
+            root.style.setProperty('--spiral-in-duration',  `${TIMINGS.spiralInDuration}ms`);
+
+            root.style.setProperty('--icon-size',          `${CARD_STYLE.iconSize}px`);
+            root.style.setProperty('--icon-top-offset',    `${CARD_STYLE.iconTopOffset}%`);
             root.style.setProperty('--icon-window-height', icons ? `${CARD_STYLE.iconWindowHeight}%` : '0%');
 
-            // Shadow under icon bleeds down onto text — kill it all when icons are off
             root.style.setProperty('--shadow-offset-y', icons ? `${CARD_STYLE.shadowOffsetY}px` : '0px');
             root.style.setProperty('--shadow-blur-1',   icons ? `${CARD_STYLE.shadowBlur1}px`   : '0px');
             root.style.setProperty('--shadow-blur-2',   icons ? `${CARD_STYLE.shadowBlur2}px`   : '0px');
             root.style.setProperty('--shadow-blur-3',   icons ? `${CARD_STYLE.shadowBlur3}px`   : '0px');
             root.style.setProperty('--shadow-opacity',  icons ? CARD_STYLE.shadowOpacity         : '0');
 
-            root.style.setProperty('--text-top-offset', `${CARD_STYLE.textTopOffset}%`);
-            root.style.setProperty('--text-font', CARD_STYLE.textFont);
-            root.style.setProperty('--text-shadow-blur', icons ? `${CARD_STYLE.textShadowBlur}px` : '0px');
-            root.style.setProperty('--text-shadow-opacity', icons ? CARD_STYLE.textShadowOpacity  : '0');
+            root.style.setProperty('--text-top-offset',      `${CARD_STYLE.textTopOffset}%`);
+            root.style.setProperty('--text-font',            CARD_STYLE.textFont);
+            root.style.setProperty('--text-shadow-blur',     icons ? `${CARD_STYLE.textShadowBlur}px` : '0px');
+            root.style.setProperty('--text-shadow-opacity',  icons ? CARD_STYLE.textShadowOpacity      : '0');
 
-            // Show/hide the darker header band (::after pseudo) and emoji elements
             root.style.setProperty('--icon-band-display', icons ? 'block' : 'none');
             root.style.setProperty('--icon-display',      icons ? 'flex'  : 'none');
         }
@@ -508,6 +1005,144 @@
         window.refreshCSSTimings = initCSSVariables;
         initCSSVariables();
 
+        // ============================================================
+        // SETTINGS PANEL - UI generation & management
+        // ============================================================
+        let activeSettingsTab = 0;
+        let settingsOpen = false;
+
+        function getConfigValue(config, path) {
+            return path.split('.').reduce((obj, key) => obj[key], config);
+        }
+
+        function setConfigValue(config, path, value) {
+            const keys = path.split('.');
+            const last = keys.pop();
+            const obj = keys.reduce((o, k) => o[k], config);
+            obj[last] = value;
+        }
+
+        function updateConfig(tabIndex, path, value) {
+            const group = CONFIG_SCHEMA[tabIndex];
+            setConfigValue(group.config, path, value);
+            group.onChange();
+        }
+
+        function buildSettingsTabs() {
+            const tabsEl = document.getElementById('settingsTabs');
+            tabsEl.innerHTML = CONFIG_SCHEMA.map((group, i) =>
+                `<button class="settings-tab-btn ${i === activeSettingsTab ? 'active' : ''}"
+                         onclick="switchSettingsTab(${i})">${group.tab}</button>`
+            ).join('');
+        }
+
+        function buildSettingsContent() {
+            const contentEl = document.getElementById('settingsContent');
+            const group = CONFIG_SCHEMA[activeSettingsTab];
+            const tabIdx = activeSettingsTab;
+
+            let html = '<div class="settings-fields">';
+
+            for (const field of group.fields) {
+                const value = getConfigValue(group.config, field.path);
+                const inputId = `cfg-${tabIdx}-${field.path.replace(/\./g, '-')}`;
+                const safeKey = `'${field.path}'`; // paths never contain single quotes
+
+                html += `<div class="settings-field">
+                    <label class="field-label" for="${inputId}">
+                        ${field.label}
+                        ${field.hint ? `<span class="field-hint">${field.hint}</span>` : ''}
+                    </label>`;
+
+                if (field.type === 'bool') {
+                    html += `<label class="toggle-label">
+                        <input type="checkbox" id="${inputId}" ${value ? 'checked' : ''}
+                               onchange="updateConfig(${tabIdx}, ${safeKey}, this.checked)">
+                        <span class="toggle-track"></span>
+                    </label>`;
+                } else if (field.type === 'percent' || field.type === 'percent100') {
+                    // 'percent'    = stored 0-1,   displayed 0-100%
+                    // 'percent100' = stored 0-100, displayed 0-100%
+                    const scale    = field.type === 'percent' ? 100 : 1;
+                    const dispMin  = (field.min ?? 0) * scale;
+                    const dispMax  = (field.max ?? 1) * scale;
+                    const dispVal  = Math.round(value * scale * 100) / 100;
+                    const step     = field.type === 'percent' ? '0.1' : '1';
+                    html += `<div class="slider-control">
+                        <input type="range" class="slider-input"
+                               id="${inputId}" min="${dispMin}" max="${dispMax}" step="${step}" value="${dispVal}"
+                               oninput="
+                                 var v=parseFloat(this.value);
+                                 this.nextElementSibling.textContent=v.toFixed(${field.type === 'percent' ? 1 : 0})+'%';
+                                 updateConfig(${tabIdx}, ${safeKey}, v / ${scale})">
+                        <span class="slider-value">${dispVal.toFixed(field.type === 'percent' ? 1 : 0)}%</span>
+                    </div>`;
+                } else if (field.type === 'int') {
+                    html += `<input type="number" id="${inputId}" value="${value}" step="1"
+                                    class="field-input"
+                                    onchange="updateConfig(${tabIdx}, ${safeKey}, parseInt(this.value) || 0)">`;
+                } else if (field.type === 'float') {
+                    html += `<input type="number" id="${inputId}" value="${value}" step="0.01"
+                                    class="field-input"
+                                    onchange="updateConfig(${tabIdx}, ${safeKey}, parseFloat(this.value) || 0)">`;
+                } else {
+                    // string
+                    html += `<input type="text" id="${inputId}" value="${value}"
+                                    class="field-input string-input"
+                                    onchange="updateConfig(${tabIdx}, ${safeKey}, this.value)">`;
+                }
+
+                html += `</div>`;
+            }
+
+            html += '</div>';
+
+            if (group.note) {
+                html += `<p class="settings-note">${group.note}</p>`;
+            }
+
+            contentEl.innerHTML = html;
+        }
+
+        function buildSettingsPanel() {
+            buildSettingsTabs();
+            buildSettingsContent();
+        }
+
+        function switchSettingsTab(index) {
+            activeSettingsTab = index;
+            buildSettingsTabs();
+            buildSettingsContent();
+            // Scroll content back to top on tab switch
+            document.getElementById('settingsContent').scrollTop = 0;
+        }
+
+        function toggleSettings() {
+            if (settingsOpen) {
+                closeSettings();
+            } else {
+                openSettings();
+            }
+        }
+
+        function openSettings() {
+            settingsOpen = true;
+            buildSettingsPanel();
+            document.getElementById('settingsPanel').classList.add('open');
+            document.getElementById('settingsBackdrop').classList.add('open');
+            document.getElementById('settingsToggleBtn').classList.add('active');
+        }
+
+        function closeSettings() {
+            settingsOpen = false;
+            document.getElementById('settingsPanel').classList.remove('open');
+            document.getElementById('settingsBackdrop').classList.remove('open');
+            document.getElementById('settingsToggleBtn').classList.remove('active');
+        }
+
+        // ============================================================
+        // ITEMS
+        // ============================================================
         const DEFAULT_ITEMS = `[
 ["Untapped potential", "💎"],
 ["Just keeping it casual (forever)", "🎭"],
@@ -553,6 +1188,9 @@
         let isBuilding = false;
         let itemsLoadedOnce = false;
 
+        // ============================================================
+        // UTILITY FUNCTIONS
+        // ============================================================
         function shuffle(array) {
             const arr = [...array];
             for (let i = arr.length - 1; i > 0; i--) {
@@ -631,7 +1269,10 @@
             }
             return roughPoints;
         }
-        
+
+        // ============================================================
+        // CARD RIPPING EFFECT
+        // ============================================================
         function createCardRip(tile) {
             const rect = tile.getBoundingClientRect();
             const sandbox = document.getElementById('particleSandbox');
@@ -675,22 +1316,19 @@
             const ripCenterY = 66.666 + randomInRange(-jitter, jitter);
             const bcX = 50 + randomInRange(-jitter, jitter);
             const bcY = 100;
-            const fragment1PointsBase = [
+            const f1 = [
                 { x: 0, y: 0 }, { x: tlX, y: tlY }, { x: ripCenterX, y: ripCenterY }, { x: bcX, y: bcY }, { x: 0, y: 100 }
-            ];
-            const fragment2PointsBase = [
+            ].map(p => rotatePoint(p, rotation));
+            const f2 = [
                 { x: ripCenterX, y: ripCenterY }, { x: trX, y: trY }, { x: 100, y: 0 }, { x: 100, y: 100 }, { x: bcX, y: bcY }
-            ];
-            const fragment3PointsBase = [
+            ].map(p => rotatePoint(p, rotation));
+            const f3 = [
                 { x: 0, y: 0 }, { x: tlX, y: tlY }, { x: ripCenterX, y: ripCenterY }, { x: trX, y: trY }, { x: 100, y: 0 }
-            ];
-            const fragment1Points = fragment1PointsBase.map(p => rotatePoint(p, rotation));
-            const fragment2Points = fragment2PointsBase.map(p => rotatePoint(p, rotation));
-            const fragment3Points = fragment3PointsBase.map(p => rotatePoint(p, rotation));
+            ].map(p => rotatePoint(p, rotation));
             return [
-                { points: fragment1Points, centroid: calculatePolygonCentroid(fragment1Points) },
-                { points: fragment2Points, centroid: calculatePolygonCentroid(fragment2Points) },
-                { points: fragment3Points, centroid: calculatePolygonCentroid(fragment3Points) }
+                { points: f1, centroid: calculatePolygonCentroid(f1) },
+                { points: f2, centroid: calculatePolygonCentroid(f2) },
+                { points: f3, centroid: calculatePolygonCentroid(f3) }
             ];
         }
 
@@ -705,34 +1343,28 @@
             const toCenterY = cardCenterY - fragmentCenterY;
             const distance = Math.sqrt(toCenterX * toCenterX + toCenterY * toCenterY);
             const startAngle = Math.atan2(-toCenterY, -toCenterX);
-            const cardOrbitalSpeed = randomInRange(vortex.orbitalSpeedMin, vortex.orbitalSpeedMax);
-            const orbitalSpeed = cardOrbitalSpeed + randomInRange(-vortex.fragmentOrbitVariation, vortex.fragmentOrbitVariation);
-            const totalRevolutions = orbitalSpeed * durationInSeconds;
-            const totalRotation = totalRevolutions * Math.PI * 2 * vortex.spiralDirection;
+            const orbitalSpeed = randomInRange(vortex.orbitalSpeedMin, vortex.orbitalSpeedMax)
+                               + randomInRange(-vortex.fragmentOrbitVariation, vortex.fragmentOrbitVariation);
+            const totalRotation = orbitalSpeed * durationInSeconds * Math.PI * 2 * vortex.spiralDirection;
             const finalDistance = distance * vortex.centerGapPercent;
             const naturalRotationSpeed = orbitalSpeed * 360 * vortex.spiralDirection;
-            const cardRelativeRotationSpeed = randomInRange(vortex.relativeRotationSpeedMin, vortex.relativeRotationSpeedMax);
-            const relativeRotationSpeed = cardRelativeRotationSpeed + randomInRange(-vortex.fragmentRotationVariation, vortex.fragmentRotationVariation);
-            const actualRotationSpeed = naturalRotationSpeed + relativeRotationSpeed;
-            const totalFragmentSpin = actualRotationSpeed * durationInSeconds;
+            const relativeRotationSpeed = randomInRange(vortex.relativeRotationSpeedMin, vortex.relativeRotationSpeedMax)
+                                        + randomInRange(-vortex.fragmentRotationVariation, vortex.fragmentRotationVariation);
+            const totalFragmentSpin = (naturalRotationSpeed + relativeRotationSpeed) * durationInSeconds;
             const keyframes = [];
-            const numSteps = vortex.spiralKeyframes;
             const easeIn = (t) => Math.pow(t, vortex.easePower);
-            for (let i = 0; i <= numSteps; i++) {
-                const t = i / numSteps;
-                const t_eased = easeIn(t);
-                const currentDistance = distance - (distance - finalDistance) * t_eased;
-                const currentAngle = startAngle + totalRotation * t_eased;
-                const x_card = Math.cos(currentAngle) * currentDistance;
-                const y_card = Math.sin(currentAngle) * currentDistance;
-                const x = x_card + toCenterX;
-                const y = y_card + toCenterY;
-                const currentRotation = totalFragmentSpin * t_eased;
-                const currentScale = 1 - t_eased;
+            for (let i = 0; i <= vortex.spiralKeyframes; i++) {
+                const t = i / vortex.spiralKeyframes;
+                const te = easeIn(t);
+                const currentDistance = distance - (distance - finalDistance) * te;
+                const currentAngle = startAngle + totalRotation * te;
+                const x = Math.cos(currentAngle) * currentDistance + toCenterX;
+                const y = Math.sin(currentAngle) * currentDistance + toCenterY;
+                const currentRotation = totalFragmentSpin * te;
+                const currentScale = 1 - te;
                 let currentOpacity = 1;
-                if (t_eased > vortex.opacityStart) {
-                    const fadeProgress = (t_eased - vortex.opacityStart) / (1 - vortex.opacityStart);
-                    currentOpacity = 1 - fadeProgress;
+                if (te > vortex.opacityStart) {
+                    currentOpacity = 1 - (te - vortex.opacityStart) / (1 - vortex.opacityStart);
                 }
                 keyframes.push({
                     transform: `translate(${x}px, ${y}px) rotate(${currentRotation}deg) scale(${currentScale})`,
@@ -741,32 +1373,35 @@
             }
             return { keyframes, duration: fragmentDuration };
         }
-        
-        function createFragment(sourceElement, rect, isFlipped) {
+
+        function createFragment(sourceElement, rect) {
             const fragment = document.createElement('div');
             fragment.className = 'card-fragment';
-            const computedStyle = window.getComputedStyle(sourceElement);
+            const cs = window.getComputedStyle(sourceElement);
             fragment.style.position = 'absolute';
             fragment.style.left = rect.left + 'px';
             fragment.style.top = rect.top + 'px';
             fragment.style.width = rect.width + 'px';
             fragment.style.height = rect.height + 'px';
-            fragment.style.background = computedStyle.background;
-            fragment.style.border = computedStyle.border;
-            fragment.style.borderRadius = computedStyle.borderRadius;
-            fragment.style.color = computedStyle.color;
-            fragment.style.fontSize = computedStyle.fontSize;
-            fragment.style.fontWeight = computedStyle.fontWeight;
+            fragment.style.background = cs.background;
+            fragment.style.border = cs.border;
+            fragment.style.borderRadius = cs.borderRadius;
+            fragment.style.color = cs.color;
+            fragment.style.fontSize = cs.fontSize;
+            fragment.style.fontWeight = cs.fontWeight;
             fragment.style.display = 'flex';
             fragment.style.alignItems = 'center';
             fragment.style.justifyContent = 'center';
             fragment.style.textAlign = 'center';
-            fragment.style.padding = computedStyle.padding;
+            fragment.style.padding = cs.padding;
             const textEl = sourceElement.querySelector('.tile-text');
             if (textEl) { fragment.textContent = textEl.textContent; }
             return fragment;
         }
 
+        // ============================================================
+        // CHAOTIC DESTRUCTION PARTICLES
+        // ============================================================
         function createChaoticDestruction(tile) {
             const rect = tile.getBoundingClientRect();
             const centerX = rect.left + rect.width / 2;
@@ -791,20 +1426,12 @@
                 const startX = Math.cos(angle) * spawnDist;
                 const startY = Math.sin(angle) * spawnDist;
                 const targetAngle = angle + (Math.random() - 0.5) * Math.PI * config.angleVariationRad;
-                const overshoot = randomInRange(config.overshootMinMult, config.overshootMaxMult);
-                const endDist = -spawnDist * overshoot;
+                const endDist = -spawnDist * randomInRange(config.overshootMinMult, config.overshootMaxMult);
                 const endX = Math.cos(targetAngle) * endDist;
                 const endY = Math.sin(targetAngle) * endDist;
                 const rotXStart = Math.random() * 360;
                 const rotYStart = Math.random() * 360;
                 const rotZStart = Math.random() * 360;
-                const rotXEnd = rotXStart + randomInRange(config.rotationMin, config.rotationMax);
-                const rotYEnd = rotYStart + randomInRange(config.rotationMin, config.rotationMax);
-                const rotZEnd = rotZStart + randomInRange(config.rotationMin, config.rotationMax);
-                const duration = randomInRange(config.minDuration, config.maxDuration);
-                const easing = config.easingFunctions[Math.floor(Math.random() * config.easingFunctions.length)];
-                const startScale = randomInRange(config.startScaleMin, config.startScaleMax);
-                const startOpacity = randomInRange(config.startOpacityMin, config.startOpacityMax);
                 particle.style.left = `${centerX}px`;
                 particle.style.top = `${centerY}px`;
                 particle.style.setProperty('--start-x', `${startX}px`);
@@ -814,21 +1441,23 @@
                 particle.style.setProperty('--rot-x-start', `${rotXStart}deg`);
                 particle.style.setProperty('--rot-y-start', `${rotYStart}deg`);
                 particle.style.setProperty('--rot-z-start', `${rotZStart}deg`);
-                particle.style.setProperty('--rot-x-end', `${rotXEnd}deg`);
-                particle.style.setProperty('--rot-y-end', `${rotYEnd}deg`);
-                particle.style.setProperty('--rot-z-end', `${rotZEnd}deg`);
-                particle.style.setProperty('--start-scale', startScale);
-                particle.style.setProperty('--start-opacity', startOpacity);
-                particle.style.setProperty('--particle-duration', `${duration}ms`);
-                particle.style.setProperty('--particle-easing', easing);
-                const startDelay = Math.random() * config.maxStartDelay;
-                particle.style.animationDelay = `${startDelay}ms`;
+                particle.style.setProperty('--rot-x-end', `${rotXStart + randomInRange(config.rotationMin, config.rotationMax)}deg`);
+                particle.style.setProperty('--rot-y-end', `${rotYStart + randomInRange(config.rotationMin, config.rotationMax)}deg`);
+                particle.style.setProperty('--rot-z-end', `${rotZStart + randomInRange(config.rotationMin, config.rotationMax)}deg`);
+                particle.style.setProperty('--start-scale', randomInRange(config.startScaleMin, config.startScaleMax));
+                particle.style.setProperty('--start-opacity', randomInRange(config.startOpacityMin, config.startOpacityMax));
+                particle.style.setProperty('--particle-duration', `${randomInRange(config.minDuration, config.maxDuration)}ms`);
+                particle.style.setProperty('--particle-easing', config.easingFunctions[Math.floor(Math.random() * config.easingFunctions.length)]);
+                particle.style.animationDelay = `${Math.random() * config.maxStartDelay}ms`;
                 sandbox.appendChild(particle);
                 particles.push(particle);
             }
             setTimeout(() => { particles.forEach(p => p.remove()); }, maxParticleLifetime);
         }
 
+        // ============================================================
+        // USER INTERACTION HANDLERS
+        // ============================================================
         function increaseItems() {
             if (currentItemCount < availableItems.length) {
                 currentItemCount++;
@@ -852,6 +1481,9 @@
             rebuildTimeout = setTimeout(() => { refreshBoard(); }, TIMINGS.debounceDelay);
         }
 
+        // ============================================================
+        // BOARD REFRESH ANIMATION SEQUENCE
+        // ============================================================
         function refreshBoard() {
             if (isBuilding) return;
             isBuilding = true;
@@ -877,14 +1509,16 @@
             }, flipBackDelay);
             const lastTileDelay = calculateStaggerDelay(tiles.length - 1, tiles.length);
             const maxParticleLifetime = PARTICLE_CONFIG.chaos.maxStartDelay + PARTICLE_CONFIG.chaos.maxDuration;
-            const maxAnimationDuration = Math.max(TIMINGS.maxRipDuration, maxParticleLifetime);
-            const totalWaitTime = flipBackDelay + lastTileDelay + maxAnimationDuration;
+            const totalWaitTime = flipBackDelay + lastTileDelay + Math.max(TIMINGS.maxRipDuration, maxParticleLifetime);
             setTimeout(() => {
                 renderPlaceholders();
                 requestAnimationFrame(() => { requestAnimationFrame(() => { populateBoard(); }); });
             }, totalWaitTime);
         }
 
+        // ============================================================
+        // BOARD RENDERING
+        // ============================================================
         async function loadItemsOnce() {
             if (itemsLoadedOnce) return;
 
@@ -913,6 +1547,7 @@
             }
 
             itemsLoadedOnce = true;
+            console.log(`Loaded ${availableItems.length} items`);
         }
 
         function renderPlaceholders() {
@@ -930,66 +1565,78 @@
                 board.appendChild(tile);
             }
         }
-        
+
         async function populateBoard() {
             const board = document.getElementById('bingoBoard');
             const minAnimTime = new Promise(resolve => setTimeout(resolve, TIMINGS.minPlaceholderDisplay));
             const itemsPromise = loadItemsOnce();
             await Promise.all([minAnimTime, itemsPromise]);
+
             if (currentItemCount > availableItems.length) currentItemCount = availableItems.length;
             document.getElementById('itemCount').textContent = currentItemCount;
+
             const allItems = availableItems.slice(0, currentItemCount);
             const targetSize = getNextSquare(allItems.length);
+            const gridSize = Math.sqrt(targetSize);
+            board.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+
             const items = [...allItems];
             while (items.length < targetSize) { items.push({ text: '', emoji: '', lineNumber: null }); }
             const shuffled = shuffle(items);
+
             const tiles = board.querySelectorAll('.bingo-tile');
             shuffled.forEach((item, index) => {
-                if (tiles[index]) {
-                    const tile = tiles[index];
-                    tile.className = 'bingo-tile';
-                    const inner = document.createElement('div');
-                    inner.className = 'tile-inner';
-                    inner.style.transform = 'scale(0) rotate(-360deg)';
-                    inner.style.opacity = '0';
-                    const front = document.createElement('div');
-                    front.className = 'tile-front';
-                    const frontText = document.createElement('div');
-                    frontText.className = 'tile-text';
-                    frontText.textContent = item.text;
-                    front.appendChild(frontText);
-                    const back = document.createElement('div');
-                    back.className = 'tile-back';
-                    if (item.emoji) {
-                        const emojiEl = document.createElement('div');
-                        emojiEl.className = 'tile-emoji';
-                        emojiEl.textContent = item.emoji;
-                        back.appendChild(emojiEl);
-                    }
-                    const backText = document.createElement('div');
-                    backText.className = 'tile-text';
-                    backText.textContent = item.text;
-                    back.appendChild(backText);
-                    if (item.lineNumber) {
-                        const lineNum = document.createElement('div');
-                        lineNum.className = 'line-number';
-                        lineNum.textContent = `#${item.lineNumber}`;
-                        back.appendChild(lineNum);
-                    }
-                    inner.appendChild(front);
-                    inner.appendChild(back);
-                    tile.innerHTML = '';
-                    tile.appendChild(inner);
-                    if (item.text) {
-                        tile.onclick = function() { this.classList.toggle('marked'); };
-                    } else {
-                        tile.classList.add('empty');
-                        tile.style.cursor = 'default';
-                        tile.onclick = null;
-                    }
+                if (!tiles[index]) return;
+                const tile = tiles[index];
+                tile.className = 'bingo-tile';
+
+                const inner = document.createElement('div');
+                inner.className = 'tile-inner';
+                inner.style.transform = 'scale(0) rotate(-360deg)';
+                inner.style.opacity = '0';
+
+                const front = document.createElement('div');
+                front.className = 'tile-front';
+                const frontText = document.createElement('div');
+                frontText.className = 'tile-text';
+                frontText.textContent = item.text;
+                front.appendChild(frontText);
+
+                const back = document.createElement('div');
+                back.className = 'tile-back';
+                if (item.emoji) {
+                    const emojiEl = document.createElement('div');
+                    emojiEl.className = 'tile-emoji';
+                    emojiEl.textContent = item.emoji;
+                    back.appendChild(emojiEl);
+                }
+                const backText = document.createElement('div');
+                backText.className = 'tile-text';
+                backText.textContent = item.text;
+                back.appendChild(backText);
+                if (item.lineNumber) {
+                    const lineNum = document.createElement('div');
+                    lineNum.className = 'line-number';
+                    lineNum.textContent = `#${item.lineNumber}`;
+                    back.appendChild(lineNum);
+                }
+
+                inner.appendChild(front);
+                inner.appendChild(back);
+                tile.innerHTML = '';
+                tile.appendChild(inner);
+
+                if (item.text) {
+                    tile.onclick = function() { this.classList.toggle('marked'); };
+                } else {
+                    tile.classList.add('empty');
+                    tile.style.cursor = 'default';
+                    tile.onclick = null;
                 }
             });
-            board.offsetHeight;
+
+            board.offsetHeight; // force reflow
+
             tiles.forEach((tile, index) => {
                 const inner = tile.querySelector('.tile-inner');
                 if (!inner) return;
@@ -1001,12 +1648,16 @@
                     setTimeout(() => { tile.classList.remove('spiral-in'); }, TIMINGS.spiralInDuration);
                 }, delay);
             });
+
             isBuilding = false;
         }
 
-        function initBoard() {
+        // ============================================================
+        // INITIALIZATION
+        // ============================================================
+        async function initBoard() {
             renderPlaceholders();
-            populateBoard();
+            await populateBoard();
         }
 
         initBoard();

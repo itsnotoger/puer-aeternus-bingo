@@ -28,7 +28,7 @@
             position: fixed;
             top: 0; left: 0; right: 0;
             height: 56px;
-            background: rgba(22, 32, 42, 0.97);
+            background: #18242f;
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             display: flex;
@@ -76,6 +76,7 @@
             flex-shrink: 0;
             user-select: none;
             white-space: nowrap;
+            font-family: inherit;
         }
 
         .control-btn:hover,
@@ -140,8 +141,11 @@
         .shuffle-btn {
             gap: 6px;
             padding: 0 13px;
-            font-size: 13px;
-            font-weight: 600;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.9);
         }
 
         /* Settings gear */
@@ -219,6 +223,28 @@
             background: white;
         }
 
+        /* Seam blend: same transition as the panel, covers top bar shadow at the joint */
+        #seamBlend {
+            position: fixed;
+            top: 55px;
+            right: 0;
+            width: 380px;
+            height: 16px;
+            background: #18242f;
+            z-index: 310;
+            pointer-events: none;
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #seamBlend.open {
+            transform: translateX(0);
+        }
+
+        @media (max-width: 600px) {
+            #seamBlend { display: none; }
+        }
+
         /* ===== SETTINGS BACKDROP ===== */
         .settings-backdrop {
             position: fixed;
@@ -251,7 +277,7 @@
 
         .settings-panel.open {
             transform: translateX(0);
-            box-shadow: -8px 0 40px 4px rgba(0, 0, 0, 0.7), -2px 0 12px rgba(0, 0, 0, 0.5);
+            box-shadow: -6px 8px 28px rgba(0, 0, 0, 0.6);
         }
 
         .settings-panel-header {
@@ -785,6 +811,7 @@
                 display: none;
             }
 
+
             .bingo-tile {
                 font-size: 11px;
             }
@@ -853,7 +880,8 @@
     <!-- BOARD -->
     <div class="bingo-container" id="bingoBoard"></div>
 
-    <!-- PARTICLE SANDBOX -->
+    <!-- SEAM BLEND STRIP: slides in with the panel, covers the top bar's shadow at the seam -->
+    <div id="seamBlend"></div>
     <div id="particleSandbox" style="position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 180;"></div>
 
     <script>
@@ -1204,6 +1232,7 @@
             document.getElementById('settingsPanel').classList.add('open');
             document.getElementById('settingsBackdrop').classList.add('open');
             document.getElementById('settingsToggleBtn').classList.add('active');
+            document.getElementById('seamBlend').classList.add('open');
         }
 
         function closeSettings() {
@@ -1211,6 +1240,7 @@
             document.getElementById('settingsPanel').classList.remove('open');
             document.getElementById('settingsBackdrop').classList.remove('open');
             document.getElementById('settingsToggleBtn').classList.remove('active');
+            document.getElementById('seamBlend').classList.remove('open');
         }
 
         // ============================================================
